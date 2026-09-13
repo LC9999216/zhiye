@@ -1,0 +1,35 @@
+# Environment
+.env
+.env.local
+*.local/
+
+# Dependencies
+node_modules/
+.venv/
+.python-version
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Test & Build
+.next/
+dist/
+build/
+*.egg-info/
+
+# Docker volumes
+pgdata/
+
+# Local fixtures and real API responses
+.local/
