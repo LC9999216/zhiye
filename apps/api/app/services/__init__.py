@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from app.core.config import settings
+from app.core.exceptions import ZhihuAuthError
 from app.services.embedding_provider import get_embedding_provider
 from app.services.llm_provider import get_llm_provider
 
@@ -38,11 +39,7 @@ def get_search_provider() -> _SearchProvider:
     from app.services.zhihu_provider import ZhihuSearchProvider
 
     if not settings.zhihu_access_secret:
-        msg = (
-            "ZHIHU_ACCESS_SECRET is empty — cannot use production provider. "
-            "Set the secret or switch to APP_MODE=mock."
-        )
-        raise ValueError(msg)
+        raise ZhihuAuthError("ZHIHU_ACCESS_SECRET is not configured")
 
     return ZhihuSearchProvider(
         access_secret=settings.zhihu_access_secret,

@@ -31,7 +31,7 @@ class Job(TimestampMixin, Base):
         Foreign key to ``queries.id``.
     status : str
         One of ``pending`` | ``fetching`` | ``analyzing`` | ``building`` |
-        ``completed`` | ``failed``.
+        ``completed`` | ``completed_partial`` | ``failed``.
     current_step : str
         Human-readable description of the current processing step.
     error_code : str | None
@@ -41,7 +41,8 @@ class Job(TimestampMixin, Base):
     started_at : datetime | None
         When processing actually began.
     finished_at : datetime | None
-        When processing reached a terminal state (``completed`` or ``failed``).
+        When processing reached a terminal state (``completed``,
+        ``completed_partial`` or ``failed``).
     """
 
     __tablename__ = "jobs"
@@ -58,6 +59,7 @@ class Job(TimestampMixin, Base):
     current_step: Mapped[str] = mapped_column(String(200), default="")
     error_code: Mapped[Optional[str]] = mapped_column(String(50))
     error_message: Mapped[Optional[str]] = mapped_column(Text)
+    warnings_json: Mapped[Optional[str]] = mapped_column(Text)
     started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 

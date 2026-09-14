@@ -1,8 +1,8 @@
 """Query ORM model — a normalized user question with search state.
 
-``normalized_query`` is unique (NFKC casefold). A second submission of the
-same logical question reuses the existing Query row and starts a fresh Job,
-unless a job is already running.
+``(data_mode, normalized_query)`` is unique (NFKC casefold). A second
+submission of the same logical question reuses the row only within the active
+data mode, so production cannot read mock or legacy results.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ class Query(TimestampMixin, Base):
     query_text : str
         The original user-submitted question text.
     normalized_query : str
-        NFKC-casefold-trim-collapsed form; unique across the table.
+        NFKC-casefold-trim-collapsed form; unique within ``data_mode``.
     search_hash_id : str | None
         Hash ID returned by the Zhihu search API for the latest fetch.
     status : str
@@ -44,7 +44,10 @@ class Query(TimestampMixin, Base):
 
     query_text: Mapped[str] = mapped_column(Text, nullable=False)
     normalized_query: Mapped[str] = mapped_column(
-        String(500), nullable=False, unique=True
+        String(500), nullable=False
+    )
+    data_mode: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="mock", index=True
     )
     search_hash_id: Mapped[Optional[str]] = mapped_column(String(200))
     status: Mapped[str] = mapped_column(
@@ -60,6 +63,12 @@ class Query(TimestampMixin, Base):
     )
     jobs: Mapped[list[Job]] = relationship(
         "Job", back_populates="query", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "data_mode", "normalized_query", name="uq_queries_mode_normalized"
+        ),
     )
 
     def __repr__(self) -> str:

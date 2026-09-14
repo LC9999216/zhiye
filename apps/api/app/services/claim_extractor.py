@@ -32,6 +32,12 @@ from app.schemas.ai import (
     RawExtractionDTO,
     ValidatedClaimDTO,
 )
+from app.core.exceptions import (
+    ProviderAuthError,
+    ProviderContractError,
+    ProviderRateLimitError,
+    ProviderUnavailableError,
+)
 from app.services.prompts import build_analysis_prompt
 from app.services.search_service import SearchPipeline
 
@@ -180,12 +186,20 @@ async def extract_claims(
             raw = RawExtractionDTO.model_validate(raw_dict)
             return validate_and_cap(raw, content_text)
         except (
+            ProviderAuthError,
+            ProviderContractError,
+            ProviderRateLimitError,
+            ProviderUnavailableError,
+            TimeoutError,
+        ):
+            # Transport, quota and provider contract failures are not format
+            # errors. Retrying them can duplicate billable calls.
+            raise
+        except (
             json.JSONDecodeError,
             ValidationError,
             TypeError,
             ValueError,
-            TimeoutError,
-            OSError,
         ) as exc:
             last_error = exc
             logger.warning(

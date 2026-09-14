@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import {
   api,
+  setInviteCode as setApiInviteCode,
   type AnswerItem,
   type GraphEdge,
   type GraphNode,
@@ -24,6 +25,7 @@ export type SearchStatus =
   | "analyzing"
   | "building"
   | "completed"
+  | "completed_partial"
   | "failed";
 
 /** 将后端 Job 状态映射为前端 SearchStatus。 */
@@ -39,6 +41,8 @@ function mapJobStatus(status: JobStatus): SearchStatus {
       return "building";
     case "completed":
       return "completed";
+    case "completed_partial":
+      return "completed_partial";
     case "failed":
       return "failed";
     default:
@@ -50,11 +54,12 @@ function mapJobStatus(status: JobStatus): SearchStatus {
 const POLL_INTERVAL_MS = 1200;
 
 /** Job 轮询总超时（毫秒），避免无限轮询。 */
-const POLL_TIMEOUT_MS = 180_000;
+const POLL_TIMEOUT_MS = 900_000;
 
 export interface SearchState {
   /** 用户输入的自然语言问题。 */
   query: string;
+  inviteCode: string;
   /** 当前搜索/分析任务状态。 */
   status: SearchStatus;
   /** 已排序的回答列表（最多 10 条，VoteUpCount 降序）。 */
@@ -65,6 +70,7 @@ export interface SearchState {
   graphEdges: GraphEdge[];
   /** 用户可见错误信息；status 为 "failed" 时非空。 */
   error: string | null;
+  warnings: string[];
   /** 后台 Job id（POST /api/queries/analyze 返回）。 */
   jobId: string | null;
   /** 当前 Query id。 */
@@ -79,6 +85,7 @@ export interface SearchState {
   isSubmitting: boolean;
 
   setQuery: (query: string) => void;
+  setInviteCode: (code: string) => void;
   submit: (queryText: string) => Promise<void>;
   selectNode: (nodeId: string | null) => void;
   selectAnswer: (answerId: string | null) => void;
@@ -89,11 +96,13 @@ export interface SearchState {
 type SearchDataState = Pick<
   SearchState,
   | "query"
+  | "inviteCode"
   | "status"
   | "results"
   | "graphNodes"
   | "graphEdges"
   | "error"
+  | "warnings"
   | "jobId"
   | "queryId"
   | "selectedNodeId"
@@ -104,11 +113,13 @@ type SearchDataState = Pick<
 
 const initialState: SearchDataState = {
   query: "",
+  inviteCode: "",
   status: "idle",
   results: [],
   graphNodes: [],
   graphEdges: [],
   error: null,
+  warnings: [],
   jobId: null,
   queryId: null,
   selectedNodeId: null,
@@ -125,23 +136,37 @@ function sleep(ms: number): Promise<void> {
 async function pollJob(
   jobId: string,
   onStatus: (status: SearchStatus) => void,
-): Promise<{ status: JobStatus; queryId: string; errorMessage: string | null }> {
+): Promise<{
+  status: JobStatus;
+  queryId: string;
+  errorCode: string | null;
+  errorMessage: string | null;
+  warnings: string[];
+}> {
   const deadline = Date.now() + POLL_TIMEOUT_MS;
   for (;;) {
     const job = await api.getJob(jobId);
     onStatus(mapJobStatus(job.status));
-    if (job.status === "completed" || job.status === "failed") {
+    if (
+      job.status === "completed" ||
+      job.status === "completed_partial" ||
+      job.status === "failed"
+    ) {
       return {
         status: job.status,
         queryId: job.query_id,
+        errorCode: job.error_code,
         errorMessage: job.error_message,
+        warnings: job.warnings ?? [],
       };
     }
     if (Date.now() >= deadline) {
       return {
         status: "failed",
         queryId: job.query_id,
-        errorMessage: "分析超时，请稍后重试",
+        errorCode: "JOB_TIMEOUT",
+        errorMessage: "任务仍可能执行，请稍后刷新查看状态",
+        warnings: [],
       };
     }
     await sleep(POLL_INTERVAL_MS);
@@ -152,6 +177,11 @@ export const useSearchStore = create<SearchState>()((set) => ({
   ...initialState,
 
   setQuery: (query) => set({ query }),
+
+  setInviteCode: (inviteCode) => {
+    setApiInviteCode(inviteCode);
+    set({ inviteCode });
+  },
 
   submit: async (queryText: string) => {
     const trimmed = queryText.trim();
@@ -164,6 +194,7 @@ export const useSearchStore = create<SearchState>()((set) => ({
       status: "submitting",
       isSubmitting: true,
       error: null,
+      warnings: [],
       results: [],
       graphNodes: [],
       graphEdges: [],
@@ -184,27 +215,30 @@ export const useSearchStore = create<SearchState>()((set) => ({
         set({
           status: "failed",
           isSubmitting: false,
-          error:
-            final.errorMessage ||
-            "分析失败，请检查后重试",
+          error: `${final.errorMessage || "分析失败，请检查后重试"}${
+            final.errorCode ? `（错误码 ${final.errorCode}）` : ""
+          }`,
         });
         return;
       }
 
-      // completed → 并行拉取 answers + graph。
+      // completed / completed_partial → 并行拉取 answers + graph。
       const queryId = final.queryId;
       const [answersRes, graphRes] = await Promise.all([
         api.getAnswers(queryId),
         api.getGraph(queryId),
       ]);
       set({
-        status: "completed",
+        status: final.status === "completed_partial" ? "completed_partial" : "completed",
         isSubmitting: false,
         queryId,
         results: answersRes.answers,
         graphNodes: graphRes.nodes,
         graphEdges: graphRes.edges,
-        error: null,
+        error: final.errorCode
+          ? `${final.errorMessage || "任务未完成模型分析"}（错误码 ${final.errorCode}）`
+          : null,
+        warnings: final.warnings,
       });
     } catch (err) {
       const message =
@@ -217,5 +251,8 @@ export const useSearchStore = create<SearchState>()((set) => ({
   selectAnswer: (selectedAnswerId) => set({ selectedAnswerId }),
   setActiveConcept: (activeConcept) => set({ activeConcept }),
 
-  reset: () => set({ ...initialState }),
+  reset: () => {
+    setApiInviteCode("");
+    set({ ...initialState });
+  },
 }));

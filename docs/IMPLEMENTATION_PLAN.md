@@ -428,6 +428,11 @@ zhiye/
 
 自动化验收：组件测试验证排序、数量、固定提示和各错误态；Answer/Claim 链接带 `noopener,noreferrer` 且 URL 来自保存的 Answer；合成 fixture 可在三栏正确显示；键盘可访问主要操作。
 
+真实体验补验提供可重复入口：`python scripts/stage6_browser_e2e.py`，通过
+`STAGE6_WEB_URL`、`STAGE6_QUERY` 和（production 时）`STAGE6_INVITE_CODE`
+配置目标环境；脚本固定 1440×900 视口并检查固定提示、完成态、回答列表、图谱
+和 Stage 8 禁用提示。它不读取或发送任何模型/知乎 Secret。
+
 人工验收：在 Chrome 当前稳定版以 1440×900 视口完成提交、查看列表、拖拽图谱、选择节点和打开原文；页面无横向溢出，固定提示无需打开帮助页即可看见。
 
 停止条件：产品要求改为移动端优先、需要新增设计系统，或图规模超出 Sigma.js 在本 MVP 数据量下的稳定渲染能力。
@@ -435,6 +440,16 @@ zhiye/
 MVP Freeze：人工验收通过后立即记录一个可回滚 commit/tag 候选，锁定 Stage 3–6 的演示路径、三个预置问题和缓存数据。未先冻结 P0 版本，不进入 Stage 7–8。
 
 预计：1 个集中冲刺日。
+
+### Stage 6 真实体验版补验入口
+
+Stage 6 的 mock 闭环通过后，真实体验版按
+`docs/REAL_API_TRIAL_PLAN.md` 执行。该补验不扩大到 Stage 7–8：继续使用官方
+知乎搜索 Count=10，文本使用 DeepSeek `deepseek-flash`，向量使用火山
+`doubao-embedding-vision-251215`（2048 维），并以 `legacy/mock/production`
+数据模式、体验码和持久化项目预算隔离结果。真实 Secret 写入、线上 migration
+和公网发布仍属于单独授权动作；在授权前只能完成本地代码、专用测试数据库和
+浏览器验证，不得用 mock 结果冒充真实验证。
 
 ### Stage 7 双向联动
 

@@ -25,13 +25,19 @@ from sqlalchemy.orm import Session, declarative_base
 class TestModelSchema:
     """Verify that ORM models define the correct constraints per IMPLEMENTATION_PLAN.md sec 6.3."""
 
-    def test_query_model_has_unique_normalized(self) -> None:
-        """``queries.normalized_query`` has a UNIQUE constraint."""
+    def test_query_model_has_mode_scoped_unique_normalized(self) -> None:
+        """Query identity is scoped by the data mode."""
         from app.models.query import Query
 
-        # normalized_query is defined inline with ``unique=True`` on the column
-        col = Query.__table__.columns["normalized_query"]
-        assert col.unique is True, "normalized_query should have unique=True"
+        assert Query.__table__.columns["data_mode"].nullable is False
+        constraints = [
+            c for c in Query.__table__.constraints if isinstance(c, UniqueConstraint)
+        ]
+        assert any(
+            {column.name for column in c.columns}
+            == {"data_mode", "normalized_query"}
+            for c in constraints
+        )
 
     def test_answer_model_unique_constraint(self) -> None:
         """``answers`` has ``uq_answer_per_query`` on (query_id, content_id)."""

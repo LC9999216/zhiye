@@ -56,6 +56,7 @@ class RawClaimDTO(BaseModel):
     )
     concepts: list[str] = Field(
         default_factory=list,
+        max_length=5,
         description="Concept names referenced by this claim",
     )
 

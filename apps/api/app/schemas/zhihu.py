@@ -8,7 +8,9 @@ so that the rest of the codebase never depends on the API's casing.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, field_validator
+from urllib.parse import urlparse
+
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class SearchItemDTO(BaseModel):
@@ -52,12 +54,26 @@ class SearchItemDTO(BaseModel):
 
     @field_validator("url")
     @classmethod
-    def _validate_url_contains_zhihu(cls, v: str) -> str:
-        """Ensure the URL points to a ``zhihu.com`` domain."""
-        if "zhihu.com" not in v.lower():
-            msg = f"URL does not contain 'zhihu.com': {v!r}"
+    def _validate_url_is_zhihu_host(cls, v: str) -> str:
+        """Accept only official HTTPS Zhihu hosts for parsed search items."""
+        parsed = urlparse(v)
+        host = (parsed.hostname or "").lower()
+        if (
+            parsed.scheme != "https"
+            or host not in {"www.zhihu.com", "zhihu.com", "zhuanlan.zhihu.com"}
+        ):
+            msg = f"URL must use an official HTTPS zhihu.com host: {v!r}"
             raise ValueError(msg)
         return v
+
+    @model_validator(mode="after")
+    def _validate_answer_path(self) -> "SearchItemDTO":
+        """Require an answer path before a result can be opened as an Answer."""
+        if self.content_type.lower() == "answer":
+            parsed = urlparse(self.url)
+            if "/answer/" not in parsed.path:
+                raise ValueError("Answer URL must contain an /answer/ path")
+        return self
 
     @field_validator("voteup_count")
     @classmethod

@@ -172,34 +172,41 @@ class SearchPipeline:
         """
         from app.services import get_search_provider
 
+        owns_provider = provider is None
         provider = provider or get_search_provider()
-        response = await provider.search(query.query_text, count=10)
+        try:
+            response = await provider.search(query.query_text, count=10)
 
-        items = response.items if response.items is not None else []
-        final = cls.execute_pipeline(items)
+            items = response.items if response.items is not None else []
+            final = cls.execute_pipeline(items)
 
-        # Persist (delete-then-insert keeps the set in sync with the API).
-        existing = await session.execute(
-            select(Answer.id).where(Answer.query_id == query.id)
-        )
-        for (aid,) in existing.all():
-            await session.delete(await session.get(Answer, aid))
-        await session.flush()
-
-        for idx, item in enumerate(final):
-            session.add(
-                Answer(
-                    query_id=query.id,
-                    content_id=item.content_id,
-                    title=item.title or "",
-                    author_name=item.author_name or "",
-                    content_text=item.content_text or "",
-                    voteup_count=item.voteup_count or 0,
-                    url=item.url or "",
-                    original_index=idx,
-                    edit_time=item.edit_time or 0,
-                    ranking_score=item.ranking_score or 0.0,
-                )
+            # Persist (delete-then-insert keeps the set in sync with the API).
+            existing = await session.execute(
+                select(Answer.id).where(Answer.query_id == query.id)
             )
-        await session.flush()
-        return final
+            for (aid,) in existing.all():
+                await session.delete(await session.get(Answer, aid))
+            await session.flush()
+
+            for idx, item in enumerate(final):
+                session.add(
+                    Answer(
+                        query_id=query.id,
+                        content_id=item.content_id,
+                        title=item.title or "",
+                        author_name=item.author_name or "",
+                        content_text=item.content_text or "",
+                        voteup_count=item.voteup_count or 0,
+                        url=item.url or "",
+                        original_index=idx,
+                        edit_time=item.edit_time or 0,
+                        ranking_score=item.ranking_score or 0.0,
+                    )
+                )
+            await session.flush()
+            return final
+        finally:
+            if owns_provider:
+                close = getattr(provider, "close", None)
+                if close is not None:
+                    await close()

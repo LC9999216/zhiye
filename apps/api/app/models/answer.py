@@ -81,6 +81,12 @@ class Answer(TimestampMixin, Base):
     summary: Mapped[Optional[str]] = mapped_column(Text)
     stance: Mapped[Optional[str]] = mapped_column(String(20))
     analysis_model: Mapped[Optional[str]] = mapped_column(String(200))
+    analysis_request_id: Mapped[Optional[str]] = mapped_column(String(200))
+    analysis_usage_json: Mapped[Optional[str]] = mapped_column(Text)
+    analysis_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending"
+    )
+    analysis_error_code: Mapped[Optional[str]] = mapped_column(String(50))
     prompt_version: Mapped[Optional[str]] = mapped_column(String(50))
     schema_version: Mapped[Optional[str]] = mapped_column(String(50))
     analyzed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))

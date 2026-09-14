@@ -6,6 +6,7 @@ Importing this package registers every model on ``Base.metadata`` so that
 
 from app.models.answer import Answer
 from app.models.answer_similarity import AnswerSimilarity
+from app.models.budget_ledger import BudgetLedger
 from app.models.chat_message import ChatMessage
 from app.models.claim import Claim
 from app.models.claim_concept import ClaimConcept
@@ -16,6 +17,7 @@ from app.models.query import Query
 __all__ = [
     "Answer",
     "AnswerSimilarity",
+    "BudgetLedger",
     "ChatMessage",
     "Claim",
     "ClaimConcept",

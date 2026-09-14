@@ -33,3 +33,23 @@ class ZhihuDataContractError(Exception):
     * The top-level response is missing required fields, **or**
     * Every individual item in the response is invalid.
     """
+
+
+class ProviderAuthError(PermissionError):
+    """A configured model provider rejected the API key."""
+
+
+class ProviderRateLimitError(Exception):
+    """A configured model provider rejected the request for quota/rate reasons."""
+
+
+class ProviderContractError(ValueError):
+    """A model provider returned a response outside the configured contract."""
+
+
+class ProviderUnavailableError(OSError):
+    """A model provider returned a transient server or transport error."""
+
+
+class BudgetExhaustedError(RuntimeError):
+    """The durable project budget cannot reserve another real job."""

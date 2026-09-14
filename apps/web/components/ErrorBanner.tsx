@@ -8,6 +8,17 @@ const ERROR_HINTS: Record<string, string> = {
   JOB_FAILED: "分析任务失败，请稍后重试。",
   SERVER_RESTART: "服务刚重启，之前的任务已中断，请重新提交。",
   NETWORK_ERROR: "无法连接后端服务，请确认 API 已启动。",
+  INVALID_INVITE_CODE: "体验码无效，请检查后重新输入。",
+  INVITE_CODE_NOT_CONFIGURED: "服务端尚未配置体验码，请联系管理员。",
+  ANALYSIS_BUSY: "当前已有真实分析任务，请稍后再试。",
+  BUDGET_EXHAUSTED: "体验预算已用尽，请等待管理员补充预算。",
+  BUDGET_PRICING_NOT_CONFIGURED: "服务端尚未配置模型计价，暂不能启动真实分析。",
+  BUDGET_UPPER_BOUND_EXCEEDS_RESERVE: "本次结果规模超过单次预算上限，请换一个更短的问题重试。",
+  BUDGET_UPPER_BOUND_UNAVAILABLE: "无法可靠估算本次调用费用，任务未启动。",
+  ZHIHU_AUTH_FAILED: "知乎服务鉴权失败，请联系管理员检查配置。",
+  ZHIHU_RATE_LIMITED: "知乎额度或频率受限，请稍后再试。",
+  PROVIDER_AUTH_FAILED: "模型服务鉴权失败，请联系管理员检查配置。",
+  PROVIDER_RATE_LIMITED: "模型服务额度或频率受限，请稍后再试。",
 };
 
 function extractCode(error: string): string {

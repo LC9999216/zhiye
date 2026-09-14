@@ -11,6 +11,7 @@ This service manages the full lifecycle of a query-analysis request:
 from __future__ import annotations
 
 import asyncio
+import json
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
@@ -29,6 +30,16 @@ from app.services.search_service import SearchPipeline
 from app.services import get_search_provider
 
 logger = get_logger(__name__)
+
+
+def _job_warnings(job: Job) -> list[str]:
+    if not job.warnings_json:
+        return []
+    try:
+        value = json.loads(job.warnings_json)
+    except (TypeError, json.JSONDecodeError):
+        return []
+    return [str(item) for item in value] if isinstance(value, list) else []
 
 
 # ── Query normalisation ──────────────────────────────────────────────
@@ -58,7 +69,10 @@ async def create_or_get_query(
         raise ValueError(msg)
 
     result = await session.execute(
-        select(Query).where(Query.normalized_query == normalized)
+        select(Query).where(
+            Query.normalized_query == normalized,
+            Query.data_mode == settings.app_mode,
+        )
     )
     existing = result.scalar_one_or_none()
 
@@ -68,6 +82,7 @@ async def create_or_get_query(
     query = Query(
         query_text=query_text.strip(),
         normalized_query=normalized,
+        data_mode=settings.app_mode,
         status="pending",
     )
     session.add(query)
@@ -86,6 +101,16 @@ async def create_job_for_query(
     ``{pending, fetching, analyzing, building}``.
     """
     active_statuses = {"pending", "fetching", "analyzing", "building"}
+    if query.status == "completed":
+        result = await session.execute(
+            select(Job)
+            .where(Job.query_id == query.id, Job.status == "completed")
+            .order_by(Job.finished_at.desc(), Job.created_at.desc())
+            .limit(1)
+        )
+        completed = result.scalar_one_or_none()
+        if completed is not None:
+            return completed, False
     result = await session.execute(
         select(Job)
         .where(Job.query_id == query.id)
@@ -163,7 +188,7 @@ async def _transition(
     job.current_step = step
     if status in ("fetching", "analyzing", "building") and job.started_at is None:
         job.started_at = _now()
-    if status in ("completed", "failed"):
+    if status in ("completed", "completed_partial", "failed"):
         job.finished_at = _now()
     if error_code:
         job.error_code = error_code
@@ -195,13 +220,14 @@ def build_job_response(
         current_step=job.current_step or "",
         error_code=job.error_code,
         error_message=job.error_message,
+        warnings=_job_warnings(job),
         created_at=job.created_at,
         started_at=job.started_at,
         finished_at=job.finished_at,
         updated_at=job.updated_at,
-        query_url=query_url if job.status == "completed" else None,
-        answers_url=answers_url if job.status == "completed" else None,
-        graph_url=graph_url if job.status == "completed" else None,
+        query_url=query_url if job.status in {"completed", "completed_partial"} else None,
+        answers_url=answers_url if job.status in {"completed", "completed_partial"} else None,
+        graph_url=graph_url if job.status in {"completed", "completed_partial"} else None,
     )
 
 
@@ -223,6 +249,7 @@ async def build_query_response(
         id=query.id,
         query_text=query.query_text,
         normalized_query=query.normalized_query,
+        data_mode=query.data_mode,
         status=query.status,
         search_hash_id=query.search_hash_id,
         answer_count=answer_count,
@@ -272,6 +299,8 @@ async def build_answers_response(
             summary=a.summary,
             stance=a.stance,
             claim_count=claim_counts.get(a.id, 0),
+            analysis_status=a.analysis_status,
+            analysis_error_code=a.analysis_error_code,
         )
         for a in answers
     ]

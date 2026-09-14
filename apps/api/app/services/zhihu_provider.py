@@ -12,6 +12,7 @@ import asyncio
 import logging
 import time
 from collections.abc import Mapping
+from urllib.parse import urlparse
 
 import httpx
 
@@ -95,6 +96,7 @@ class ZhihuSearchProvider:
         search_url: str,
         connect_timeout: float = 5.0,
         read_timeout: float = 20.0,
+        transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
         self._access_secret = access_secret
         self._search_url = search_url
@@ -117,6 +119,7 @@ class ZhihuSearchProvider:
                 max_connections=_MAX_CONCURRENT_REQUESTS,
                 max_keepalive_connections=_MAX_CONCURRENT_REQUESTS,
             ),
+            transport=transport,
         )
 
     # ── public API ────────────────────────────────────────────────────
@@ -160,9 +163,10 @@ class ZhihuSearchProvider:
     @staticmethod
     def _validate_search_url(url: str) -> None:
         """Ensure the endpoint URL is a ``developer.zhihu.com`` URL."""
-        if _EXPECTED_URL_DOMAIN not in url.lower():
+        parsed = urlparse(url)
+        if parsed.scheme != "https" or (parsed.hostname or "").lower() != _EXPECTED_URL_DOMAIN:
             msg = (
-                f"Search URL must contain '{_EXPECTED_URL_DOMAIN}', "
+                f"Search URL must use HTTPS host '{_EXPECTED_URL_DOMAIN}', "
                 f"got {url!r}"
             )
             raise ValueError(msg)
@@ -236,6 +240,10 @@ class ZhihuSearchProvider:
                 "Zhihu search HTTP error: status=%s",
                 exc.response.status_code,
             )
+            if exc.response.status_code in (401, 403):
+                raise ZhihuAuthError("Zhihu authentication failed") from exc
+            if exc.response.status_code == 429:
+                raise ZhihuRateLimitError("Zhihu rate limit or quota reached") from exc
             raise
         except httpx.TimeoutException:
             logger.warning("Zhihu search request timed out")

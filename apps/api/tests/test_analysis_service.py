@@ -161,9 +161,9 @@ class TestAnalyzeAnswerNoDB:
         )
 
         assert isinstance(failure, AnalysisFailureDTO)
-        assert failure.error_code == "ANALYSIS_FAILED"
-        assert failure.attempts == 3  # 1 initial + 2 retries
-        assert provider.calls == 3
+        assert failure.error_code == "PROVIDER_TIMEOUT"
+        assert failure.attempts == 1  # provider timeout is never retried
+        assert provider.calls == 1
         # On failure the answer must not be marked analysed.
         assert answer.analyzed_at is None
 
@@ -211,10 +211,9 @@ class TestAnalyzeAnswerNoDB:
 class TestProductionProviderGate:
     """Production mode must NOT silently fall back to mock providers.
 
-    Real LLM/embedding providers are not implemented yet; the gate forces
-    an explicit NotImplementedError instead of returning mock data in
-    production — so nobody can accidentally run the pipeline on mock
-    output while believing it is real.
+    Missing real credentials fail explicitly instead of returning mock data,
+    so nobody can accidentally run the pipeline on fixture output while
+    believing it is real.
     """
 
     async def test_llm_provider_gate_raises_in_production(
@@ -225,7 +224,8 @@ class TestProductionProviderGate:
 
         monkeypatch.setattr(settings, "app_mode", "production")
         monkeypatch.setattr(settings, "llm_api_key", "")
-        with pytest.raises(NotImplementedError):
+        from app.core.exceptions import ProviderAuthError
+        with pytest.raises(ProviderAuthError):
             get_llm_provider()
 
     async def test_embedding_provider_gate_raises_in_production(
@@ -235,7 +235,9 @@ class TestProductionProviderGate:
         from app.services.embedding_provider import get_embedding_provider
 
         monkeypatch.setattr(settings, "app_mode", "production")
-        with pytest.raises(NotImplementedError):
+        from app.core.exceptions import ProviderAuthError
+        monkeypatch.setattr(settings, "embedding_api_key", "")
+        with pytest.raises(ProviderAuthError):
             get_embedding_provider()
 
     async def test_llm_provider_returns_mock_in_mock_mode(

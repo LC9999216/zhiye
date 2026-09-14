@@ -16,6 +16,7 @@ import json
 
 import pytest
 
+from app.core.exceptions import ProviderAuthError
 from app.schemas.ai import (
     ClaimExtractionDTO,
     MAX_CLAIMS_PER_ANSWER,
@@ -266,13 +267,19 @@ class TestRetry:
         assert exc_info.value.attempts == 3
         assert len(provider.calls) == 3
 
-    async def test_provider_timeout_surfaces_as_failure(self) -> None:
+    async def test_provider_timeout_is_not_retried(self) -> None:
         provider = FakeProvider(
             [TimeoutError("LLM timed out")] * 3
         )
-        with pytest.raises(ClaimExtractionError) as exc_info:
+        with pytest.raises(TimeoutError):
             await extract_claims(provider, "a4", CONTENT)
-        assert exc_info.value.attempts == 3
+        assert len(provider.calls) == 1
+
+    async def test_provider_auth_is_not_retried(self) -> None:
+        provider = FakeProvider([ProviderAuthError("bad key")])
+        with pytest.raises(ProviderAuthError):
+            await extract_claims(provider, "a-auth", CONTENT)
+        assert len(provider.calls) == 1
 
     async def test_empty_array_output(self) -> None:
         provider = FakeProvider(

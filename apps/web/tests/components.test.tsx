@@ -176,6 +176,13 @@ describe("SearchForm", () => {
     );
   });
 
+  it("shows a warning instead of the green success copy for partial completion", () => {
+    useSearchStore.setState({ status: "completed_partial" });
+    render(<SearchForm />);
+    expect(screen.getByText(/已保存搜索结果和可用图谱/)).toBeInTheDocument();
+    expect(screen.queryByText(/已生成回答列表与知识图谱/)).not.toBeInTheDocument();
+  });
+
   it("submits the trimmed query", async () => {
     const submitMock = vi.fn(async () => {});
     useSearchStore.setState({

@@ -5,6 +5,7 @@ import { ContextPanel } from "@/components/ContextPanel";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { GraphPanel } from "@/components/GraphPanel";
 import { SearchForm } from "@/components/SearchForm";
+import { WarningBanner } from "@/components/WarningBanner";
 
 const FIXED_SCOPE_NOTICE =
   "观点基于知乎搜索返回内容生成，可能不包含原回答全部信息";
@@ -46,6 +47,7 @@ export default function HomePage() {
 
         {/* 错误态 */}
         <ErrorBanner />
+        <WarningBanner />
 
         {/* 三栏布局：桌面优先；窄屏仅显示左栏（回答） */}
         <div className="mt-4 grid flex-1 grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)_300px]">

@@ -113,6 +113,15 @@ export function AnswerList({ answers }: AnswerListProps) {
                 <div className="mb-1 truncate text-xs text-slate-500">
                   {answer.author_name || "匿名用户"}
                 </div>
+                {answer.analysis_status === "failed" ? (
+                  <div className="mb-1 text-xs text-red-600">
+                    观点提取失败（{answer.analysis_error_code ?? "未知错误"}）
+                  </div>
+                ) : answer.analysis_status === "completed" && answer.claim_count === 0 ? (
+                  <div className="mb-1 text-xs text-slate-400">
+                    已分析：未找到可验证观点
+                  </div>
+                ) : null}
                 <p className="line-clamp-2 text-xs leading-relaxed text-slate-600">
                   {answer.content_text}
                 </p>

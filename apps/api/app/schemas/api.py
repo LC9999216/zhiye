@@ -53,17 +53,18 @@ class JobResponse(BaseModel):
     id: uuid.UUID
     query_id: uuid.UUID
     status: str = Field(
-        pattern=r"^(pending|fetching|analyzing|building|completed|failed)$"
+        pattern=r"^(pending|fetching|analyzing|building|completed|completed_partial|failed)$"
     )
     current_step: str = ""
     error_code: Optional[str] = None
     error_message: Optional[str] = None
+    warnings: list[str] = Field(default_factory=list)
     created_at: datetime
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
     updated_at: datetime
 
-    # Terminal response: available when status == "completed".
+    # Terminal response: available when analysis completed fully or partially.
     query_url: Optional[str] = None
     answers_url: Optional[str] = None
     graph_url: Optional[str] = None
@@ -77,6 +78,7 @@ class QueryResponse(BaseModel):
     id: uuid.UUID
     query_text: str
     normalized_query: str
+    data_mode: str
     status: str
     search_hash_id: Optional[str] = None
     answer_count: int = 0
@@ -101,6 +103,8 @@ class AnswerItem(BaseModel):
     summary: Optional[str] = None
     stance: Optional[str] = None
     claim_count: int = 0
+    analysis_status: str = "pending"
+    analysis_error_code: Optional[str] = None
 
 
 class AnswersResponse(BaseModel):

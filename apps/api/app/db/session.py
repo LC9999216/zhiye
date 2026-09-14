@@ -7,6 +7,7 @@ import ssl
 from collections.abc import AsyncIterator
 
 from sqlalchemy import text
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -29,11 +30,27 @@ DB_CHECK_TIMEOUT_SECONDS = 5.0
 # is not honoured by asyncpg the way psycopg does.
 _SSL_CONTEXT = ssl.create_default_context()
 
+
+def connection_args_for_database(url: str) -> dict[str, object]:
+    """Use TLS for managed Postgres while keeping local Postgres testable."""
+    lowered = url.lower()
+    if "neon.tech" in lowered or "sslmode=require" in lowered:
+        return {"ssl": _SSL_CONTEXT}
+    return {}
+
+
+def normalized_database_url(url: str) -> str:
+    """Remove psycopg-style ``sslmode`` before handing URL to asyncpg."""
+    parsed = make_url(url)
+    query = dict(parsed.query)
+    query.pop("sslmode", None)
+    return str(parsed.set(query=query))
+
 engine: AsyncEngine = create_async_engine(
-    settings.database_url,
+    normalized_database_url(settings.database_url),
     echo=False,
     pool_pre_ping=True,
-    connect_args={"ssl": _SSL_CONTEXT},
+    connect_args=connection_args_for_database(settings.database_url),
 )
 
 async_session_factory = async_sessionmaker(

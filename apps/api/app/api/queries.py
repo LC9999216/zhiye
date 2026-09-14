@@ -8,11 +8,11 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, status
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.dependencies import get_db
+from app.core.dependencies import get_db, require_invite_code
 from app.core.logging import get_logger
 from app.models.job import Job
 from app.models.query import Query
@@ -37,7 +37,11 @@ from app.services.job_processor import process_job
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/queries", tags=["queries"])
+router = APIRouter(
+    prefix="/queries",
+    tags=["queries"],
+    dependencies=[Depends(require_invite_code)],
+)
 
 _BASE_URL = ""  # Relative URLs — clients resolve against their base.
 
@@ -62,7 +66,30 @@ async def analyze_query(
     Actual processing (search → AI analysis → graph building) runs as a
     single-process background task, tracked through the ``jobs`` table.
     """
+    if settings.app_mode == "production":
+        # Serialize the short admission transaction so two async requests
+        # cannot both pass the one-real-job gate or race the mode/query
+        # composite unique constraint.
+        await session.execute(text("SELECT pg_advisory_xact_lock(81273401)"))
     query, _ = await create_or_get_query(session, body.query_text)
+    if settings.app_mode == "production":
+        active = await session.execute(
+            select(Job)
+            .join(Query, Query.id == Job.query_id)
+            .where(
+                Query.data_mode == "production",
+                Job.query_id != query.id,
+                Job.status.in_({"pending", "fetching", "analyzing", "building"}),
+            )
+        )
+        if len(active.scalars().all()) >= settings.max_concurrent_jobs:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail={
+                    "error_code": "ANALYSIS_BUSY",
+                    "message": "当前已有真实分析任务，请稍后再试",
+                },
+            )
     job, is_new = await create_job_for_query(session, query)
     await session.commit()
 
@@ -104,7 +131,7 @@ async def get_query(
 ) -> QueryResponse:
     """Return metadata about a previously submitted query."""
     result = await session.execute(
-        select(Query).where(Query.id == query_id)
+        select(Query).where(Query.id == query_id, Query.data_mode == settings.app_mode)
     )
     query = result.scalar_one_or_none()
     if query is None:
@@ -130,7 +157,7 @@ async def get_answers(
 ) -> AnswersResponse:
     """Return the sorted list of answers for a query."""
     result = await session.execute(
-        select(Query).where(Query.id == query_id)
+        select(Query).where(Query.id == query_id, Query.data_mode == settings.app_mode)
     )
     query = result.scalar_one_or_none()
     if query is None:
@@ -161,7 +188,7 @@ async def get_graph(
     source URL so clicks open the original answer.
     """
     result = await session.execute(
-        select(Query).where(Query.id == query_id)
+        select(Query).where(Query.id == query_id, Query.data_mode == settings.app_mode)
     )
     query = result.scalar_one_or_none()
     if query is None:

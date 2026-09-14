@@ -8,6 +8,13 @@
 
 const DEFAULT_API_BASE_URL = "http://localhost:8000";
 
+// Module memory only: refreshing the page clears the invite code.
+let inviteCode = "";
+
+export function setInviteCode(value: string): void {
+  inviteCode = value.trim();
+}
+
 /** 返回 API 基础地址，去除尾部斜杠，保证 URL 拼接一致。 */
 export function getApiBaseUrl(): string {
   const configured = process.env.NEXT_PUBLIC_API_URL;
@@ -68,6 +75,7 @@ export interface JobResponse {
   current_step: string;
   error_code: string | null;
   error_message: string | null;
+  warnings: string[];
   created_at: string;
   started_at: string | null;
   finished_at: string | null;
@@ -84,6 +92,7 @@ export type JobStatus =
   | "analyzing"
   | "building"
   | "completed"
+  | "completed_partial"
   | "failed";
 
 /** GET /api/queries/{id}/answers 的单条 Answer。 */
@@ -99,6 +108,8 @@ export interface AnswerItem {
   summary: string | null;
   stance: string | null;
   claim_count: number;
+  analysis_status?: "pending" | "completed" | "failed";
+  analysis_error_code?: string | null;
 }
 
 /** GET /api/queries/{id}/answers 的响应。 */
@@ -185,7 +196,26 @@ function messageFromErrorBody(body: ApiErrorBody): string {
   if (typeof body.error_code === "string" && body.error_code.length > 0) {
     return `请求失败（错误码 ${body.error_code}）`;
   }
+  if (typeof body.detail === "object" && body.detail !== null) {
+    const detail = body.detail as { message?: unknown };
+    if (typeof detail.message === "string" && detail.message.length > 0) {
+      return detail.message;
+    }
+  }
   return "请求失败，请稍后重试";
+}
+
+function errorCodeFromBody(body: ApiErrorBody, fallback: string): string {
+  if (typeof body.error_code === "string" && body.error_code.length > 0) {
+    return body.error_code;
+  }
+  if (typeof body.detail === "object" && body.detail !== null) {
+    const detail = body.detail as { error_code?: unknown };
+    if (typeof detail.error_code === "string" && detail.error_code.length > 0) {
+      return detail.error_code;
+    }
+  }
+  return fallback;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -198,6 +228,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...init,
       headers: {
         "Content-Type": "application/json",
+        ...(inviteCode ? { "X-Invite-Code": inviteCode } : {}),
         ...init?.headers,
       },
     });
@@ -211,11 +242,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const body = await parseErrorBody(response);
-    const code =
-      typeof body.error_code === "string" && body.error_code.length > 0
-        ? body.error_code
-        : `HTTP_${response.status}`;
-    throw new ApiError(messageFromErrorBody(body), response.status, code);
+    const code = errorCodeFromBody(body, `HTTP_${response.status}`);
+    throw new ApiError(
+      `${messageFromErrorBody(body)}（错误码 ${code}）`,
+      response.status,
+      code,
+    );
   }
 
   return (await response.json()) as T;

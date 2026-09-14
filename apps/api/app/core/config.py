@@ -54,13 +54,34 @@ class Settings(BaseSettings):
 
     # ---- LLM provider (OpenAI-compatible) ------------------------------
     llm_api_key: str = Field(default="")
-    llm_base_url: str = Field(default="")
-    llm_model: str = Field(default="")
+    llm_base_url: str = Field(default="https://api.deepseek.com")
+    llm_model: str = Field(default="deepseek-flash")
+    llm_timeout_seconds: float = Field(default=45.0, gt=0, le=120)
 
     # ---- Embedding provider (OpenAI-compatible) -------------------------
     embedding_api_key: str = Field(default="")
-    embedding_base_url: str = Field(default="")
-    embedding_model: str = Field(default="")
+    embedding_base_url: str = Field(default="https://ark.cn-beijing.volces.com/api/v3")
+    embedding_model: str = Field(default="doubao-embedding-vision-251215")
+    embedding_dimension: int = Field(default=2048, ge=1, le=4096)
+    embedding_timeout_seconds: float = Field(default=20.0, gt=0, le=120)
+
+    # ---- Access and budget controls ------------------------------------
+    invite_code_sha256: str = Field(default="")
+    budget_limit_cny: float = Field(default=20.0, gt=0)
+    budget_reserve_limit_cny: float = Field(default=18.0, gt=0)
+    # Deprecated compatibility knob.  The runtime now computes the reservation
+    # from the returned answer sizes and configured conservative price bounds.
+    budget_reservation_cny: float = Field(default=0.0, ge=0)
+    budget_llm_input_cny_per_1k: float = Field(default=0.0, ge=0)
+    budget_llm_output_cny_per_1k: float = Field(default=0.0, ge=0)
+    budget_embedding_cny_per_1k: float = Field(default=0.0, ge=0)
+    budget_llm_max_output_tokens: int = Field(default=4096, ge=1, le=16384)
+    budget_llm_max_attempts: int = Field(default=3, ge=1, le=5)
+    budget_embedding_max_tokens_per_input: int = Field(default=4096, ge=1, le=16384)
+    budget_concept_max_tokens_per_input: int = Field(default=256, ge=1, le=4096)
+    budget_max_concepts_per_claim: int = Field(default=5, ge=1, le=20)
+    max_concurrent_jobs: int = Field(default=1, ge=1, le=4)
+    job_timeout_seconds: float = Field(default=900.0, gt=0, le=1800)
 
     # ---- Logging / CORS / serving --------------------------------------
     log_level: str = Field(default="INFO")

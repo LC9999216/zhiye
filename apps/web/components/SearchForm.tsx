@@ -11,6 +11,7 @@ export const STATUS_LABELS: Record<SearchStatus, string> = {
   analyzing: "正在提取观点…",
   building: "正在构建知识图谱…",
   completed: "分析完成",
+  completed_partial: "部分完成",
   failed: "分析失败",
 };
 
@@ -33,8 +34,11 @@ interface SearchFormProps {
  */
 export function SearchForm({ onSubmit }: SearchFormProps) {
   const query = useSearchStore((s) => s.query);
+  const inviteCode = useSearchStore((s) => s.inviteCode);
   const setQuery = useSearchStore((s) => s.setQuery);
+  const setInviteCode = useSearchStore((s) => s.setInviteCode);
   const status = useSearchStore((s) => s.status);
+  const error = useSearchStore((s) => s.error);
   const isSubmitting = useSearchStore((s) => s.isSubmitting);
   const submit = useSearchStore((s) => s.submit);
 
@@ -49,6 +53,20 @@ export function SearchForm({ onSubmit }: SearchFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3" noValidate>
+      <label htmlFor="invite-code-input" className="text-sm font-semibold text-slate-700">
+        体验码
+      </label>
+      <input
+        id="invite-code-input"
+        type="password"
+        value={inviteCode}
+        onChange={(e) => setInviteCode(e.target.value)}
+        placeholder="受邀用户请输入体验码"
+        autoComplete="off"
+        disabled={busy}
+        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+        aria-label="输入体验码"
+      />
       <label htmlFor="query-input" className="text-sm font-semibold text-slate-700">
         输入问题
       </label>
@@ -83,6 +101,11 @@ export function SearchForm({ onSubmit }: SearchFormProps) {
       {status === "completed" && (
         <p role="status" className="rounded-lg border border-green-100 bg-green-50 px-3 py-2 text-xs text-green-800">
           {STATUS_LABELS.completed}：已生成回答列表与知识图谱
+        </p>
+      )}
+      {status === "completed_partial" && (
+        <p role="status" className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          {STATUS_LABELS.completed_partial}：已保存搜索结果和可用图谱，{error ? "请查看上方提示并稍后重试。" : "部分回答未完成观点提取；可重新提交。"}
         </p>
       )}
     </form>

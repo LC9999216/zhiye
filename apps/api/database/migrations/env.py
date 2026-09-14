@@ -15,7 +15,6 @@ Run:
 from __future__ import annotations
 
 import asyncio
-import ssl
 from logging.config import fileConfig
 
 from alembic import context
@@ -27,6 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 import app.models  # noqa: F401
 from app.core.config import settings
 from app.db.base import Base
+from app.db.session import connection_args_for_database, normalized_database_url
 
 # Alembic Config object.
 config = context.config
@@ -77,11 +77,12 @@ async def run_async_migrations() -> None:
     Uses ``create_async_engine`` with the project's ``database_url``
     (asyncpg driver), then runs migration steps via ``run_sync``.
     """
-    db_url = config.get_main_option("sqlalchemy.url")
+    configured_url = config.get_main_option("sqlalchemy.url")
+    db_url = normalized_database_url(configured_url)
     connectable = create_async_engine(
         db_url,
         poolclass=pool.NullPool,
-        connect_args={"ssl": ssl.create_default_context()},
+        connect_args=connection_args_for_database(configured_url),
     )
 
     async with connectable.connect() as connection:

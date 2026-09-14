@@ -100,6 +100,7 @@ async def build_concepts(
     query_id: uuid.UUID,
     *,
     threshold: float = CONCEPT_SIMILARITY_THRESHOLD,
+    usage_sink: list[dict[str, object]] | None = None,
 ) -> list[Concept]:
     """Materialise query-scoped concepts + claim_concepts from claims.
 
@@ -120,88 +121,129 @@ async def build_concepts(
     if not claims:
         return []
 
-    embedder = get_embedding_provider()
+    try:
+        embedder = get_embedding_provider()
+    except Exception as exc:  # noqa: BLE001 — semantic edges are optional
+        logger.warning("Embedding provider unavailable; building base concepts only: %s", exc)
+        embedder = None
 
-    # name -> Concept (per query).  Collect all names first so we can
-    # flush the new Concept rows once (they need DB-generated ids before
-    # claim_concepts rows can reference them).
-    name_to_claim_ids: dict[str, list[uuid.UUID]] = {}
-    raw_names_by_claim: dict[uuid.UUID, list[str]] = {}
-    for claim in claims:
-        concepts = _parse_concepts_json(claim.concepts_json)
-        raw_names_by_claim[claim.id] = concepts
-        for raw_name in concepts:
-            normalized = normalize_concept_name(raw_name)
-            if not normalized:
-                continue
-            # Deterministic alias merging: collapse aliases into one key.
-            group = alias_group(normalized)
-            key = group if group else normalized
-            name_to_claim_ids.setdefault(key, []).append(claim.id)
+    try:
+        # name -> Concept (per query).  Collect all names first so we can
+        # flush the new Concept rows once (they need DB-generated ids before
+        # claim_concepts rows can reference them).
+        name_to_claim_ids: dict[str, list[uuid.UUID]] = {}
+        for claim in claims:
+            concepts = _parse_concepts_json(claim.concepts_json)
+            for raw_name in concepts:
+                normalized = normalize_concept_name(raw_name)
+                if not normalized:
+                    continue
+                # Deterministic alias merging: collapse aliases into one key.
+                group = alias_group(normalized)
+                key = group if group else normalized
+                name_to_claim_ids.setdefault(key, []).append(claim.id)
 
-    if not name_to_claim_ids:
-        return []
+        if not name_to_claim_ids:
+            return []
 
-    by_name: dict[str, Concept] = {}
-    for normalized, claim_ids in name_to_claim_ids.items():
-        # Reuse an existing concept row if one already exists for the query.
-        existing = await session.execute(
-            select(Concept).where(
-                Concept.query_id == query_id,
-                Concept.normalized_name == normalized,
-            )
-        )
-        concept = existing.scalar_one_or_none()
-        if concept is None:
-            concept = Concept(
-                query_id=query_id,
-                canonical_name=normalized,
-                normalized_name=normalized,
-                frequency=0,
-            )
-            session.add(concept)
-            concept.frequency += len(claim_ids)
-        by_name[normalized] = concept
-
-    # Flush so every concept has a DB-generated id.
-    await session.flush()
-
-    # Load existing claim_concepts rows for the query (idempotency).
-    existing_links = await session.execute(
-        select(ClaimConcept.claim_id, ClaimConcept.concept_id).where(
-            ClaimConcept.query_id == query_id
-        )
-    )
-    existing_pairs = {
-        (claim_id, concept_id)
-        for claim_id, concept_id in existing_links.all()
-    }
-
-    for normalized, concept in by_name.items():
-        if concept.embedding is None:
-            vecs = await embedder.embed_texts([concept.canonical_name])
-            concept.embedding = vecs[0]
-            concept.embedding_model = "mock-embed-v1"
-        for claim_id in name_to_claim_ids[normalized]:
-            if (claim_id, concept.id) in existing_pairs:
-                continue  # already linked (idempotent re-run)
-            session.add(
-                ClaimConcept(
-                    query_id=query_id,
-                    claim_id=claim_id,
-                    concept_id=concept.id,
+        by_name: dict[str, Concept] = {}
+        for normalized, claim_ids in name_to_claim_ids.items():
+            # Reuse an existing concept row if one already exists for the query.
+            existing = await session.execute(
+                select(Concept).where(
+                    Concept.query_id == query_id,
+                    Concept.normalized_name == normalized,
                 )
             )
+            concept = existing.scalar_one_or_none()
+            if concept is None:
+                concept = Concept(
+                    query_id=query_id,
+                    canonical_name=normalized,
+                    normalized_name=normalized,
+                    frequency=0,
+                )
+                session.add(concept)
+                concept.frequency += len(claim_ids)
+            by_name[normalized] = concept
 
-    await session.flush()
-    concepts = list(by_name.values())
+        # Flush so every concept has a DB-generated id.
+        await session.flush()
 
-    # Merge similar concepts (within same query).
-    merged = await _merge_similar_concepts(
-        session, concepts, threshold, query_id=query_id
-    )
-    await session.flush()
-    return merged
+        # Load existing claim_concepts rows for the query (idempotency).
+        existing_links = await session.execute(
+            select(ClaimConcept.claim_id, ClaimConcept.concept_id).where(
+                ClaimConcept.query_id == query_id
+            )
+        )
+        existing_pairs = {
+            (claim_id, concept_id)
+            for claim_id, concept_id in existing_links.all()
+        }
+
+        for normalized, concept in by_name.items():
+            if concept.embedding is None and embedder is not None:
+                usage_start = len(getattr(embedder, "usage_records", []) or [])
+                try:
+                    vecs = await embedder.embed_texts([concept.canonical_name])
+                    concept.embedding = vecs[0]
+                    result = getattr(embedder, "last_result", None)
+                    concept.embedding_model = (
+                        getattr(result, "model", None)
+                        or getattr(embedder, "model_name", None)
+                        or settings.embedding_model
+                    )
+                    if usage_sink is not None:
+                        records = getattr(embedder, "usage_records", []) or []
+                        usage_sink.extend(
+                            dict(item)
+                            for item in records[usage_start:]
+                            if isinstance(item, dict)
+                        )
+                except Exception as exc:  # noqa: BLE001 — graph remains useful without vectors
+                    if usage_sink is not None:
+                        usage_sink.append(
+                            {
+                                "model": getattr(embedder, "model_name", None),
+                                "request_id": None,
+                                "total_tokens": 0,
+                                "usage_available": False,
+                                "error_code": type(exc).__name__,
+                            }
+                        )
+                    logger.warning(
+                        "Concept embedding failed for %r; keeping concept without semantic merge: %s",
+                        concept.canonical_name,
+                        exc,
+                    )
+            for claim_id in name_to_claim_ids[normalized]:
+                if (claim_id, concept.id) in existing_pairs:
+                    continue  # already linked (idempotent re-run)
+                session.add(
+                    ClaimConcept(
+                        query_id=query_id,
+                        claim_id=claim_id,
+                        concept_id=concept.id,
+                    )
+                )
+
+        await session.flush()
+        concepts = list(by_name.values())
+
+        # Merge similar concepts (within same query).
+        merged = await _merge_similar_concepts(
+            session, concepts, threshold, query_id=query_id
+        )
+        await session.flush()
+        return merged
+    finally:
+        if embedder is not None:
+            close = getattr(embedder, "aclose", None)
+            if close is not None:
+                try:
+                    await close()
+                except Exception as exc:  # noqa: BLE001 — cleanup must not mask graph results
+                    logger.warning("Embedding provider close failed: %s", type(exc).__name__)
 
 
 def _parse_concepts_json(raw: str | None) -> list[str]:
@@ -239,6 +281,10 @@ async def _merge_similar_concepts(
         for j in range(i + 1, len(concepts)):
             a, b = concepts[i], concepts[j]
             if a.embedding is None or b.embedding is None:
+                continue
+            if not a.embedding_model or a.embedding_model != b.embedding_model:
+                continue
+            if len(a.embedding) != len(b.embedding):
                 continue
             sim = cosine_similarity(a.embedding, b.embedding)
             if sim >= threshold:
@@ -335,6 +381,10 @@ async def build_answer_similarities(
             a, b = answers[i], answers[j]
             if a.embedding is None or b.embedding is None:
                 continue
+            if not a.embedding_model or a.embedding_model != b.embedding_model:
+                continue
+            if len(a.embedding) != len(b.embedding):
+                continue
             sim = cosine_similarity(a.embedding, b.embedding)
             if sim >= threshold:
                 candidates.append((sim, a, b))
@@ -351,7 +401,7 @@ async def build_answer_similarities(
                 source_answer_id=low,
                 target_answer_id=high,
                 score=sim,
-                embedding_model="mock-embed-v1",
+                embedding_model=a.embedding_model,
                 method_version=ANSWER_METHOD_VERSION,
             )
             session.add(row)

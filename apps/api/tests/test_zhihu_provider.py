@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import httpx
 import pytest
 
 from app.core.exceptions import (
@@ -19,6 +20,7 @@ from app.core.exceptions import (
 )
 from app.schemas.zhihu import SearchItemDTO, SearchResponseDTO
 from app.services.mock_search_provider import MockSearchProvider
+from app.services.zhihu_provider import ZhihuSearchProvider
 
 
 # ── Fixture directory relative to this test file ───────────────────────
@@ -143,6 +145,18 @@ class TestValidation:
                 voteup_count=-1,
             )
 
+    def test_answer_url_rejects_lookalike_domain(self) -> None:
+        with pytest.raises(Exception):
+            SearchItemDTO(
+                original_index=0,
+                title="Test",
+                content_type="Answer",
+                content_id="x",
+                content_text="text",
+                url="https://evilzhihu.com/answer/x",
+                voteup_count=10,
+            )
+
     def test_missing_required_item_keys(self, provider: MockSearchProvider) -> None:
         """Item missing a required key → discarded."""
         raw = {
@@ -159,7 +173,7 @@ class TestValidation:
                         "ContentText": "text",
                         "Url": "https://www.zhihu.com/answer/x",
                         "VoteUpCount": 10,
-                    }
+            }
                 ],
             },
         }
@@ -195,3 +209,33 @@ class TestValidation:
                 voteup_count=10,
                 ranking_score=-0.5,
             )
+
+
+@pytest.mark.asyncio
+async def test_real_provider_maps_http_auth_without_retry() -> None:
+    calls = 0
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return httpx.Response(401, json={"message": "bad secret"})
+
+    provider = ZhihuSearchProvider(
+        "secret",
+        "https://developer.zhihu.com/api/v1/content/zhihu_search",
+        transport=httpx.MockTransport(handler),
+    )
+    try:
+        with pytest.raises(ZhihuAuthError):
+            await provider.search("test")
+        assert calls == 1
+    finally:
+        await provider.close()
+
+
+def test_real_provider_rejects_lookalike_search_host() -> None:
+    with pytest.raises(ValueError):
+        ZhihuSearchProvider(
+            "secret",
+            "https://developer.zhihu.com.evil.example/api/v1/content/zhihu_search",
+        )
