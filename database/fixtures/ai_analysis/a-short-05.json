@@ -1,0 +1,12 @@
+{
+  "summary": "问题没有标准答案",
+  "stance": "neutral",
+  "claims": [
+    {
+      "text": "这个问题没有标准答案",
+      "evidence_text": "这个问题没有标准答案",
+      "confidence": 0.6,
+      "concepts": []
+    }
+  ]
+}

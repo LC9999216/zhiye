@@ -1,0 +1,22 @@
+{
+  "summary": "备考非常辛苦",
+  "stance": "neutral",
+  "claims": [
+    {
+      "text": "备考需要每天学习十小时以上",
+      "evidence_text": "需要每天学习十小时以上",
+      "confidence": 0.85,
+      "concepts": [
+        "备考"
+      ]
+    },
+    {
+      "text": "需要坚持半年以上",
+      "evidence_text": "坚持半年以上",
+      "confidence": 0.8,
+      "concepts": [
+        "备考"
+      ]
+    }
+  ]
+}

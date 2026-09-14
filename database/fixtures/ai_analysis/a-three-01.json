@@ -1,0 +1,30 @@
+{
+  "summary": "考研利弊并存",
+  "stance": "conditional",
+  "claims": [
+    {
+      "text": "考研能带来更好的平台",
+      "evidence_text": "考研能带来更好的平台",
+      "confidence": 0.9,
+      "concepts": [
+        "考研"
+      ]
+    },
+    {
+      "text": "考研花费三年时间",
+      "evidence_text": "考研但也花费三年时间",
+      "confidence": 0.8,
+      "concepts": [
+        "时间成本"
+      ]
+    },
+    {
+      "text": "考研需要家庭支持",
+      "evidence_text": "还需要家庭支持",
+      "confidence": 0.7,
+      "concepts": [
+        "家庭"
+      ]
+    }
+  ]
+}

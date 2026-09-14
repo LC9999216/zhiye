@@ -1,0 +1,22 @@
+{
+  "summary": "反对盲目考研",
+  "stance": "oppose",
+  "claims": [
+    {
+      "text": "不建议盲目考研",
+      "evidence_text": "不建议盲目考研",
+      "confidence": 0.85,
+      "concepts": [
+        "考研"
+      ]
+    },
+    {
+      "text": "三年时间成本太高",
+      "evidence_text": "三年时间成本太高",
+      "confidence": 0.8,
+      "concepts": [
+        "时间成本"
+      ]
+    }
+  ]
+}

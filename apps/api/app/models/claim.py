@@ -10,7 +10,7 @@ import uuid
 from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import CheckConstraint, Float, ForeignKey, Integer, String, Text, UniqueConstraint
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -58,6 +58,11 @@ class Claim(TimestampMixin, Base):
     evidence_text: Mapped[str] = mapped_column(Text, default="")
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
+    # pgvector embedding (mapped as ARRAY[Float]; the DB column is created
+    # via raw SQL in migration 0001_core).
+    embedding: Mapped[Optional[list[float]]] = mapped_column(
+        ARRAY(Float), nullable=True
+    )
     embedding_model: Mapped[Optional[str]] = mapped_column(String(200))
 
     # ── relationships ────────────────────────────────────────────────

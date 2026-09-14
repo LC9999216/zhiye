@@ -1,0 +1,23 @@
+{
+  "summary": "AI专业考研热度上升",
+  "stance": "neutral",
+  "claims": [
+    {
+      "text": "AI专业考研热度上升",
+      "evidence_text": "人工智能专业的考研热度持续上升",
+      "confidence": 0.8,
+      "concepts": [
+        "人工智能",
+        "考研"
+      ]
+    },
+    {
+      "text": "算法岗位竞争激烈",
+      "evidence_text": "算法岗位竞争激烈",
+      "confidence": 0.75,
+      "concepts": [
+        "算法岗位"
+      ]
+    }
+  ]
+}

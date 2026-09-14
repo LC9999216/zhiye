@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -86,9 +86,12 @@ class Answer(TimestampMixin, Base):
     analyzed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     analysis_latency_ms: Mapped[Optional[int]] = mapped_column(Integer)
 
-    # pgvector embedding column is added via raw SQL in migration;
-    # see migration 0001_core for the ``vector(1536)`` column definition.
-    # ORM access uses ``session.execute(text(...))``.
+    # pgvector embedding column (mapped as ARRAY[Float]; the DB column is
+    # created via raw SQL in migration 0001_core).
+    embedding: Mapped[Optional[list[float]]] = mapped_column(
+        ARRAY(Float), nullable=True
+    )
+    embedding_model: Mapped[Optional[str]] = mapped_column(String(200))
 
     # ── relationships ────────────────────────────────────────────────
     query: Mapped[Query] = relationship("Query", back_populates="answers")

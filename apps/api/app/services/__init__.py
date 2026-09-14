@@ -9,6 +9,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from app.core.config import settings
+from app.services.embedding_provider import get_embedding_provider
+from app.services.llm_provider import get_llm_provider
 
 if TYPE_CHECKING:
     from app.schemas.zhihu import SearchItemDTO, SearchResponseDTO
@@ -49,5 +51,7 @@ def get_search_provider() -> _SearchProvider:
 
 
 __all__ = [
+    "get_embedding_provider",
+    "get_llm_provider",
     "get_search_provider",
 ]

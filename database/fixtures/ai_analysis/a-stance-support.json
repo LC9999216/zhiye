@@ -1,0 +1,14 @@
+{
+  "summary": "支持考研",
+  "stance": "support",
+  "claims": [
+    {
+      "text": "学历提升在求职中作用明显",
+      "evidence_text": "学历提升在求职中作用明显",
+      "confidence": 0.9,
+      "concepts": [
+        "学历"
+      ]
+    }
+  ]
+}

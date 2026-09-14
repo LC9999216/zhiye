@@ -1,0 +1,22 @@
+{
+  "summary": "视条件而定",
+  "stance": "conditional",
+  "claims": [
+    {
+      "text": "经济条件允许时可考研",
+      "evidence_text": "如果家庭经济条件允许",
+      "confidence": 0.85,
+      "concepts": [
+        "家庭"
+      ]
+    },
+    {
+      "text": "否则建议先就业",
+      "evidence_text": "否则建议先就业",
+      "confidence": 0.8,
+      "concepts": [
+        "就业"
+      ]
+    }
+  ]
+}

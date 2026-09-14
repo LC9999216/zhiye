@@ -1,0 +1,22 @@
+{
+  "summary": "个人能力比学历更重要",
+  "stance": "conditional",
+  "claims": [
+    {
+      "text": "本硕薪资差距逐渐缩小",
+      "evidence_text": "本科和硕士毕业生的薪资差距逐渐缩小",
+      "confidence": 0.8,
+      "concepts": [
+        "薪资"
+      ]
+    },
+    {
+      "text": "关键还是个人能力",
+      "evidence_text": "关键还是个人能力",
+      "confidence": 0.85,
+      "concepts": [
+        "个人能力"
+      ]
+    }
+  ]
+}

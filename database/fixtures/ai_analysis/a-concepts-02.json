@@ -1,0 +1,23 @@
+{
+  "summary": "软件工程重实践",
+  "stance": "conditional",
+  "claims": [
+    {
+      "text": "软件工程强调工程能力",
+      "evidence_text": "软件工程强调工程能力",
+      "confidence": 0.8,
+      "concepts": [
+        "软件工程"
+      ]
+    },
+    {
+      "text": "考研与否不影响实践积累",
+      "evidence_text": "考研与否不影响实践积累",
+      "confidence": 0.7,
+      "concepts": [
+        "考研",
+        "实践"
+      ]
+    }
+  ]
+}

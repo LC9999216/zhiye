@@ -1,0 +1,22 @@
+{
+  "summary": "读研能积累科研经验",
+  "stance": "support",
+  "claims": [
+    {
+      "text": "读研能接触前沿研究",
+      "evidence_text": "读研期间能接触前沿研究",
+      "confidence": 0.85,
+      "concepts": [
+        "科研"
+      ]
+    },
+    {
+      "text": "能积累论文发表经验",
+      "evidence_text": "积累论文发表经验",
+      "confidence": 0.8,
+      "concepts": [
+        "论文"
+      ]
+    }
+  ]
+}

@@ -125,6 +125,24 @@ class TestModelSchema:
         assert "prompt_version" in cols
         assert "analyzed_at" in cols
         assert "analysis_latency_ms" in cols
+        # Stage 4 embedding columns
+        assert "embedding" in cols
+        assert "embedding_model" in cols
+
+    def test_claim_model_columns(self) -> None:
+        """``claims`` has the expected Stage 4 columns."""
+        from app.models.claim import Claim
+
+        cols = [c.name for c in Claim.__table__.columns]
+        assert "id" in cols
+        assert "query_id" in cols
+        assert "answer_id" in cols
+        assert "text" in cols
+        assert "evidence_text" in cols
+        assert "position" in cols
+        assert "confidence" in cols
+        assert "embedding" in cols
+        assert "embedding_model" in cols
 
     def test_job_model_columns(self) -> None:
         """``jobs`` has the expected columns."""

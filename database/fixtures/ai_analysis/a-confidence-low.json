@@ -1,0 +1,14 @@
+{
+  "summary": "不确定",
+  "stance": "neutral",
+  "claims": [
+    {
+      "text": "可能考研会好一点",
+      "evidence_text": "可能考研会好一点",
+      "confidence": 0.2,
+      "concepts": [
+        "考研"
+      ]
+    }
+  ]
+}

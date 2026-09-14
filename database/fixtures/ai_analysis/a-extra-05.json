@@ -1,0 +1,23 @@
+{
+  "summary": "考研就业可先后兼顾",
+  "stance": "conditional",
+  "claims": [
+    {
+      "text": "考研和就业不是非此即彼",
+      "evidence_text": "考研和就业不是非此即彼的选择",
+      "confidence": 0.8,
+      "concepts": [
+        "考研",
+        "就业"
+      ]
+    },
+    {
+      "text": "可以工作几年后再读研",
+      "evidence_text": "有人工作几年后再读研",
+      "confidence": 0.75,
+      "concepts": [
+        "读研"
+      ]
+    }
+  ]
+}

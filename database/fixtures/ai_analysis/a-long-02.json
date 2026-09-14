@@ -1,0 +1,30 @@
+{
+  "summary": "考研需要长期规划",
+  "stance": "support",
+  "claims": [
+    {
+      "text": "需要明确研究兴趣",
+      "evidence_text": "你需要明确自己的研究兴趣",
+      "confidence": 0.85,
+      "concepts": [
+        "研究兴趣"
+      ]
+    },
+    {
+      "text": "要评估目标院校师资",
+      "evidence_text": "要评估目标院校的师资力量",
+      "confidence": 0.8,
+      "concepts": [
+        "院校"
+      ]
+    },
+    {
+      "text": "要考虑家庭经济承受能力",
+      "evidence_text": "还要考虑家庭的经济承受能力",
+      "confidence": 0.75,
+      "concepts": [
+        "家庭"
+      ]
+    }
+  ]
+}
