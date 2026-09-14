@@ -27,6 +27,7 @@ Thumbs.db
 dist/
 build/
 *.egg-info/
+.coverage
 
 # Docker volumes
 pgdata/
