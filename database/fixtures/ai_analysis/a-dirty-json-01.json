@@ -1,0 +1,3 @@
+```json
+{"summary": "脏JSON被正确解析", "stance": "neutral", "claims": [{"text": "内容A", "evidence_text": "内容A", "confidence": 0.5, "concepts": ["概念"]}]}
+```

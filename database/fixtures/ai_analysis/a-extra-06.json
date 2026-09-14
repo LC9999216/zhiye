@@ -1,0 +1,22 @@
+{
+  "summary": "进大厂开发本科更划算",
+  "stance": "support",
+  "claims": [
+    {
+      "text": "目标进大厂做开发",
+      "evidence_text": "如果目标是进大厂做开发",
+      "confidence": 0.8,
+      "concepts": [
+        "大厂"
+      ]
+    },
+    {
+      "text": "本科毕业直接就业性价比更高",
+      "evidence_text": "本科毕业直接就业性价比更高",
+      "confidence": 0.85,
+      "concepts": [
+        "就业"
+      ]
+    }
+  ]
+}

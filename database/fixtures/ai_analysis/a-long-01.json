@@ -1,0 +1,23 @@
+{
+  "summary": "建议在校期间积累项目经验",
+  "stance": "support",
+  "claims": [
+    {
+      "text": "企业倾向有项目经验的候选人",
+      "evidence_text": "许多企业更倾向于招聘有实际项目经验的候选人",
+      "confidence": 0.9,
+      "concepts": [
+        "企业",
+        "项目经验"
+      ]
+    },
+    {
+      "text": "建议参与开源项目或实习",
+      "evidence_text": "建议在校期间多参与开源项目或实习",
+      "confidence": 0.85,
+      "concepts": [
+        "实习"
+      ]
+    }
+  ]
+}

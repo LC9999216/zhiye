@@ -1,0 +1,22 @@
+{
+  "summary": "考研与就业各有优势",
+  "stance": "conditional",
+  "claims": [
+    {
+      "text": "考研能系统化理论基础",
+      "evidence_text": "考研系统化理论基础",
+      "confidence": 0.9,
+      "concepts": [
+        "考研"
+      ]
+    },
+    {
+      "text": "就业能快速积累实践",
+      "evidence_text": "就业快速积累实践",
+      "confidence": 0.85,
+      "concepts": [
+        "就业"
+      ]
+    }
+  ]
+}

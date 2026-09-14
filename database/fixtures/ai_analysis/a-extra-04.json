@@ -1,0 +1,22 @@
+{
+  "summary": "部分公司要求硕士学历",
+  "stance": "support",
+  "claims": [
+    {
+      "text": "大型国企要求硕士学历",
+      "evidence_text": "有些公司明确要求硕士学历",
+      "confidence": 0.85,
+      "concepts": [
+        "国企"
+      ]
+    },
+    {
+      "text": "部分研究机构要求硕士",
+      "evidence_text": "比如大型国企和部分研究机构",
+      "confidence": 0.8,
+      "concepts": [
+        "研究机构"
+      ]
+    }
+  ]
+}

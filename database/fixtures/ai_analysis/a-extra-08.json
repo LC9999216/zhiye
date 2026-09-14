@@ -1,0 +1,22 @@
+{
+  "summary": "不建议辞职考研",
+  "stance": "oppose",
+  "claims": [
+    {
+      "text": "不建议辞职考研",
+      "evidence_text": "不建议辞职考研",
+      "confidence": 0.85,
+      "concepts": [
+        "考研"
+      ]
+    },
+    {
+      "text": "边工作边备考更稳妥",
+      "evidence_text": "边工作边备考更稳妥",
+      "confidence": 0.8,
+      "concepts": [
+        "备考"
+      ]
+    }
+  ]
+}

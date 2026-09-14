@@ -1,0 +1,46 @@
+{
+  "summary": "考研有五大好处",
+  "stance": "support",
+  "claims": [
+    {
+      "text": "考研提升学历",
+      "evidence_text": "考研提升学历",
+      "confidence": 0.9,
+      "concepts": [
+        "学历"
+      ]
+    },
+    {
+      "text": "考研拓展人脉",
+      "evidence_text": "考研拓展人脉",
+      "confidence": 0.85,
+      "concepts": [
+        "人脉"
+      ]
+    },
+    {
+      "text": "考研提供缓冲期",
+      "evidence_text": "考研提供缓冲期",
+      "confidence": 0.8,
+      "concepts": [
+        "缓冲期"
+      ]
+    },
+    {
+      "text": "考研增加就业选择",
+      "evidence_text": "考研增加就业选择",
+      "confidence": 0.75,
+      "concepts": [
+        "就业"
+      ]
+    },
+    {
+      "text": "考研提升研究能力",
+      "evidence_text": "考研提升研究能力",
+      "confidence": 0.7,
+      "concepts": [
+        "研究能力"
+      ]
+    }
+  ]
+}

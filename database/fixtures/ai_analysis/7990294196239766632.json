@@ -1,0 +1,22 @@
+{
+  "summary": "计算机专业学生普遍面临考研与就业的纠结选择",
+  "stance": "neutral",
+  "claims": [
+    {
+      "text": "几乎所有计算机专业学生都会遇到这个选择",
+      "evidence_text": "这个问题几乎每个计算机专业的学生都会遇到",
+      "confidence": 0.9,
+      "concepts": [
+        "计算机"
+      ]
+    },
+    {
+      "text": "这是大家最纠结的选择之一",
+      "evidence_text": "也是大家最纠结的选择之一",
+      "confidence": 0.9,
+      "concepts": [
+        "选择"
+      ]
+    }
+  ]
+}

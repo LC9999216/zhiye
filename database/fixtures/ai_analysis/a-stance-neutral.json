@@ -1,0 +1,15 @@
+{
+  "summary": "保持中立",
+  "stance": "neutral",
+  "claims": [
+    {
+      "text": "考研就业各有利弊",
+      "evidence_text": "考研和就业各有各的好处",
+      "confidence": 0.7,
+      "concepts": [
+        "考研",
+        "就业"
+      ]
+    }
+  ]
+}

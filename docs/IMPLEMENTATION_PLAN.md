@@ -1,16 +1,18 @@
-# 知辨小型 MVP 详细执行方案
+# 知辨黑客松 MVP 完整执行计划
 
 ## 1. 执行结论
 
-本方案可以实施，但必须把知乎数据能力当作外部依赖，而不是默认可控的数据源。项目的第一目标不是搭 UI，而是证明官方搜索接口能够针对自然语言问题稳定返回可分析的 Answer 摘要、赞同数和原文链接。Stage 0 未通过时，项目不得继续。
+方向可行。Stage 0 已证明知乎官方搜索接口能够返回可分析的 Answer 摘要、赞同数和原文链接，Stage 1–2 已完成工程骨架与搜索 Provider。接下来不再扩大技术选型，主线固定为：数据库落地 → 第一次线上部署 → AI 观点提取 → 图谱生成 → 三栏 UI → 可演示版本冻结；双向联动和可溯源问答作为加分项继续完成。
 
-计划状态：可执行，尚未开始编码。
+计划状态：Stage 0–2 已完成，当前入口为 Stage 3。
 
 计划路径：`D:\AI\zhiye\docs\IMPLEMENTATION_PLAN.md`
 
-仓库现状：当前目录只有产品方案 DOCX、根目录 `AGENTS.md` 与本计划文件，尚无应用代码，也尚未初始化 Git。Git 初始化与特性分支创建是实施前置动作，必须早于 Stage 0 产生任何 fixture 或审计记录。
+仓库现状：Git 已初始化，`feat/zhibian-mvp` 与远端同名分支已存在；FastAPI、Next.js、Docker Compose、合成 fixture、知乎搜索 Provider 和 41 项后端测试、3 项前端测试已落库并通过，前端 typecheck 与生产构建通过。Stage 3 所需业务表仍是占位模型，尚无版本化 migration，也没有 Query/Job API；`eslint@10` 与当前 `eslint-config-next` 的兼容问题会导致 lint 启动失败，Next.js 生产构建还会自动改写未对齐的 `tsconfig.json`。这两项基线问题必须在 Stage 3 开始时用最小配置或依赖修复解决。
 
-预计周期：单人配合 AI 开发约 3 到 5 周。该估算不包含开放平台审批、额度恢复、模型账号开通和生产部署等待时间。
+推荐节奏：5 个集中冲刺日优先完成 Stage 3–6、Deployment 0、MVP Freeze 与 Stage 9；Stage 7–8 只使用剩余时间。如果只剩 48 小时，严格执行本计划的“48 小时保命方案”。云平台审核、额度恢复和外部服务故障不计入开发工时。
+
+优先级：完整可演示闭环 > 核心功能正确 > UI 精细程度 > 覆盖率增量 > 架构扩展性。测试、数据边界和 Secret 安全仍是硬门，不能作为赶工项删除。
 
 ## 2. 最终产品契约
 
@@ -38,7 +40,7 @@
 
 ## 3. 执行边界
 
-### 3.1 当前版本必须完成
+### 3.1 P0 参赛版本必须完成
 
 - Next.js 三栏 Web 页面。
 - FastAPI 服务、PostgreSQL + pgvector、Alembic migration。
@@ -46,27 +48,34 @@
 - 搜索结果过滤、去重、排序和持久化。
 - Answer 结构化提取、Claim 证据校验、概念归一化。
 - 固定四层图谱和四类基础关系。
-- 回答列表、图谱、AI 面板联动与知乎原文跳转。
-- 基于保存内容的 Graph-enhanced RAG 与 Citation。
+- 回答列表、图谱、只读上下文面板与知乎原文跳转。
 - 健康检查、任务状态、空态、错误态、最小观测指标。
-- 自动化测试、Docker Compose 本地运行和演示脚本。
+- 自动化测试、Docker Compose 本地运行、公开演示环境和缓存演示数据。
 
-### 3.2 当前版本明确不做
+P0 完成标志：Stage 3–6 与 Deployment 0 全部通过并冻结一个可回滚版本。右栏可以只展示选中节点上下文，但不得伪装成已完成的 AI 对话。
+
+### 3.2 P1 加分项
+
+- Stage 7：回答列表、图谱和右侧上下文的双向联动。
+- Stage 8：基于已保存内容的 Graph-enhanced RAG 与可点击 Citation。
+- 如果时间不足，可跳过 P1 直接进入 Stage 9；跳过项必须在 README、演示脚本和交付记录中明确标注。
+
+### 3.3 当前版本明确不做
 
 - 知乎 OAuth 用户登录、关注、收藏、评论、个人知识库或发布内容。
 - 网页爬虫、登录态抓取、私有接口、回答全文补抓。
 - 热榜、问答社区、多平台内容源、定时任务和推送。
 - Neo4j、Redis、Celery、Kafka、Kubernetes、微服务。
 - SUPPORTS/CONTRADICTS 自动推理、社区检测和复杂多跳图算法。
-- 多 Agent 工作流、内容导出、移动端专项适配、生产部署。
+- 多 Agent 工作流、内容导出、移动端专项适配、复杂运营后台。
 
-### 3.3 必须停止并请求用户决定的情况
+### 3.4 必须停止并请求用户决定的情况
 
 - Stage 0 无法证明官方接口满足最小字段契约。
 - 需要改用抓取、私有接口或第三方非授权数据源。
 - 需要更换核心技术栈或重做主数据模型。
 - 需要删除不可恢复的数据或覆盖用户文件。
-- 需要开通付费模型、付费数据库或部署公网生产环境。
+- 需要开通付费模型或付费数据库、写入真实 Secret、创建云资源或把服务公开到公网。Deployment 0 是计划内步骤，但实际外部操作必须单独获得用户授权。
 - 需要扩大到用户系统、OAuth 或账号私有数据。
 
 ## 4. 关键架构决策
@@ -88,6 +97,14 @@ MVP 规模最多 1 个 Query 对应 10 个 Answer，图规模很小。PostgreSQL
 ### 4.4 LLM Provider 隔离
 
 实现 OpenAI-compatible 的 `LLMProvider` 与 `EmbeddingProvider` 接口，通过环境变量配置。Prompt、JSON Schema 与业务校验由本仓库控制，避免把业务契约交给厂商 SDK。
+
+### 4.5 Deployment-first 部署组合
+
+黑客松目标环境固定为 Vercel `apps/web`、Railway `apps/api`、Neon PostgreSQL + pgvector。Stage 3 完成后立即执行一次 Deployment 0，用最小真实链路提前暴露 CORS、`PORT`、migration、环境变量和云数据库连接问题，不等到 Stage 9 才部署。
+
+Vercel 与 Railway 都按 monorepo 子目录配置 Root Directory。Railway 在镜像构建后、服务启动前执行 `alembic upgrade head`，并为 pre-deploy 设置有限超时；Docker 启动命令必须通过 shell 展开平台提供的 `PORT`。Neon 只承担 PostgreSQL 与 pgvector，不再引入独立向量数据库。
+
+执行前复核官方文档：[Vercel Monorepos](https://vercel.com/docs/monorepos)、[Railway Pre-deploy Command](https://docs.railway.com/deployments/pre-deploy-command)、[Railway Start Command](https://docs.railway.com/deployments/start-command)、[Neon AI Concepts and pgvector](https://neon.com/docs/ai/ai-concepts)。平台界面和限制可能变化，实际部署以执行当天的官方文档为准。
 
 ## 5. 目标目录结构
 
@@ -201,21 +218,23 @@ zhiye/
 
 ### 实施前置动作 仓库保护
 
-输入：用户已明确要求开始编码；当前工作区状态；根目录 `AGENTS.md` 与本计划。
+输入：用户已明确要求继续实施；当前工作区状态；根目录 `AGENTS.md`、本计划与上一阶段进度记录。
 
 任务：
 
-1. 再次确认 `D:\AI\zhiye` 是目标目录，记录初始文件清单。
-2. 若无 `.git`，初始化 Git 并提交只包含现有 DOCX、`AGENTS.md` 与本计划的基线提交。
-3. 创建并切换到 `feat/zhibian-mvp`；确认后续写入不会发生在 `main`。
-4. 创建 `docs/progress/`，每个 Stage 的执行记录写入 `STAGE_N.md`。
-5. 把 `.env`、`.local/`、真实 API 响应与本地测试数据库加入 `.gitignore`。
+1. 再次确认 `D:\AI\zhiye` 是目标目录，并读取 `docs/progress/STAGE_0.md` 到 `STAGE_2.md`。
+2. 确认当前分支为现有的 `feat/zhibian-mvp`；不得在 `main` 上继续实现。
+3. 记录 `git status`，保留用户已有改动，不覆盖或回退无关文件。
+4. 每个后续 Stage 的执行记录写入 `docs/progress/STAGE_N.md`；Deployment 0 单独写入 `docs/progress/DEPLOYMENT_0.md`。
+5. 确认 `.env`、`.local/`、真实 API 响应与本地测试数据库仍被 `.gitignore` 排除。
 
 验收：`git status` 可解释、当前分支为 `feat/zhibian-mvp`、受保护 DOCX 哈希未变化、真实凭证和真实响应不会被 Git 跟踪。
 
 停止条件：目标目录不明确、存在无法安全保留的用户改动、Git 初始化会覆盖现有历史，或用户只要求继续审阅方案而未授权编码。
 
 ### Stage 0 知乎数据可行性门
+
+状态：已完成。证据见 `docs/progress/STAGE_0.md`；3 个问题、6 次真实调用通过当前样本契约审计。
 
 目标：在不搭建应用功能前，用只读调用和独立审计证明当前官方数据契约可用。
 
@@ -246,6 +265,8 @@ zhiye/
 
 ### Stage 1 工程初始化
 
+状态：已完成。证据见 `docs/progress/STAGE_1.md`；数据库集成测试因本机当时没有可用 Docker/PostgreSQL 而未验证。
+
 目标：建立可重复启动、可测试的 monorepo 基础。
 
 输入：实施前置动作与 Stage 0 均已通过；已确认可用的 Node、Python、Docker 与 PostgreSQL 运行环境。
@@ -254,7 +275,7 @@ zhiye/
 
 1. 建立 Next.js、FastAPI、PostgreSQL + pgvector 与 Docker Compose。
 2. 添加 `.env.example`、依赖锁文件、lint/typecheck/test 脚本。
-3. 建立 `/api/health`、数据库连接和第一条 Alembic migration。
+3. 建立 `/api/health`、数据库连接和 Alembic 骨架；第一条业务 migration 留到 Stage 3。
 4. 提供 `APP_MODE=mock`，使无真实知乎与 LLM 密钥时也能用合成 fixture 启动和验收基础工程。
 5. CI 只运行合成 fixture 测试，不访问真实知乎或 LLM。
 
@@ -267,6 +288,8 @@ zhiye/
 预计：1 到 2 天。
 
 ### Stage 2 ZhihuSearchProvider
+
+状态：已完成。证据见 `docs/progress/STAGE_2.md`；本阶段使用合成 fixture，真实接口验证沿用 Stage 0 结果。
 
 目标：把官方 HTTP 响应稳定映射为内部 DTO。
 
@@ -297,26 +320,53 @@ zhiye/
 
 任务：
 
-1. 编写 queries、answers、jobs 的 migration 和 ORM，并落实 `normalized_query` 唯一约束。
-2. 实现 `POST /api/queries/analyze` 和 `GET /api/jobs/{id}`。
-3. Query 规范化固定使用 Unicode NFKC、首尾 trim、连续空白折叠与 casefold；相同 `normalized_query` 原子复用同一 Query。若已有活动 Job，返回该 Job；否则创建刷新 Job。
-4. 刷新搜索成功后在事务中替换该 Query 的 Answer 集合；不创建重复 `(query_id, content_id)`，失败时保留上一份已完成结果。
-5. 每一步更新 Job 状态；单条 Answer 后续分析失败不丢失其他成功结果。
-6. 服务重启时把遗留运行中 Job 标记为可解释的失败状态。
+1. 先以当前 `npm run lint` 失败和 `npm run build` 自动改写 `tsconfig.json` 为基线，用最小版本锁定与配置更新解决 ESLint 兼容和构建配置漂移；不得借机升级前端技术栈。修复后连续运行 lint、typecheck、test、build，`git diff` 不应再出现构建器自动改写。
+2. 为 migration、模型约束、幂等提交、失败刷新保留旧结果和 Job 状态写失败测试。
+3. 编写 `0001_core` migration 和 queries、answers、jobs ORM，落实 `normalized_query` 唯一约束，并添加 pgvector 依赖。
+4. 实现 `POST /api/queries/analyze`、`GET /api/jobs/{id}`、`GET /api/queries/{id}` 与 `GET /api/queries/{id}/answers`。
+5. Query 规范化固定使用 Unicode NFKC、首尾 trim、连续空白折叠与 casefold；相同 `normalized_query` 原子复用同一 Query。若已有活动 Job，返回该 Job；否则创建刷新 Job。
+6. 刷新搜索成功后在事务中替换该 Query 的 Answer 集合；不创建重复 `(query_id, content_id)`，失败时保留上一份已完成结果。
+7. 每一步更新 Job 状态；单条 Answer 后续分析失败不丢失其他成功结果。
+8. 服务重启时把遗留运行中 Job 标记为可解释的失败状态。
+9. 修复生产 Docker 镜像，确保包含 `alembic.ini`、migration 目录和运行依赖；启动命令支持平台注入的 `PORT`。
 
-自动化验收：fixture 导入后只有 1 个 Query、最多 10 个 Answer，读取顺序保持 VoteUpCount 非递增；大小写/空白等价查询与并发重复提交只产生一个 Query 和一个活动 Job；失败刷新不破坏上一份完成结果；事务测试通过。
+自动化验收：`npm run lint`、现有 41 项后端测试、3 项前端测试和 typecheck 先恢复全绿；fixture 导入后只有 1 个 Query、最多 10 个 Answer，读取顺序保持 VoteUpCount 非递增；大小写/空白等价查询与并发重复提交只产生一个 Query 和一个活动 Job；失败刷新不破坏上一份完成结果；事务测试通过。
 
 人工验收：用相同问题的空白变体连续提交两次，返回相同 query_id；Job 完成响应能直接提供 answers_url 与 graph_url。
 
 停止条件：幂等规则需要保留多版本历史、单进程 Job 无法满足用户要求，或必须引入外部队列才能继续。
 
-预计：2 到 3 天。
+预计：1 个集中冲刺日。
+
+### Deployment 0 第一次线上部署
+
+目标：在 AI 与图谱开发前证明 Vercel、Railway、Neon 和浏览器之间的最小公网链路可用，提前解决部署问题。
+
+输入：Stage 3 通过；用户已明确授权创建或使用相应云资源、配置 Secret 并公开部署；GitHub 仓库可被部署平台读取。
+
+任务：
+
+1. 在 Neon 创建专用 PostgreSQL，启用 `vector` 扩展，把 `DATABASE_URL` 只保存到受控环境变量。
+2. 在 Railway 部署 `apps/api`，镜像必须包含 migration；pre-deploy 运行 `alembic upgrade head` 并设置有限超时，启动命令读取平台 `PORT`。
+3. 在 Vercel 部署 `apps/web`，Root Directory 指向 `apps/web`，`NEXT_PUBLIC_API_URL` 指向 Railway 公网地址。
+4. 配置最小 CORS 白名单，只允许实际 Vercel Origin；不得使用 `*` 搭配凭据。
+5. 在线提交一个 Query，确认 Browser → Web → API → DB 完整链路；知乎/LLM 真实 Secret 只在用户授权后配置。
+
+自动化验收：`alembic upgrade head` 在空 Neon 数据库成功；Railway 构建和 pre-deploy 成功；Vercel 生产构建成功；`GET /api/health` 返回 API 与数据库可用；浏览器无 CORS 错误。
+
+人工验收：用户能从公网 URL 打开页面并提交一个 mock 或已授权的真实 Query，Neon 中出现 Query、Answer 与 Job；重新部署 API 后数据仍存在。
+
+交付物：`docs/progress/DEPLOYMENT_0.md` 记录平台项目名称、非敏感 URL、部署 commit、migration 版本、验收结果和已知限制，不记录 Secret 或完整连接串。
+
+停止条件：用户未授权外部写入或公开发布、平台要求付费、Secret 权限不明确、migration 会作用于非专用数据库，或公网链路无法在不放宽安全边界的前提下工作。
+
+预计：半天到 1 个集中冲刺日。
 
 ### Stage 4 AI 结构化提取
 
 目标：对每条 ContentText 生成受约束的结构化观点。
 
-输入：Stage 3 通过；第 6.2 节唯一 AI Schema；至少 30 条确定性合成 Answer fixture，其中包含短文本、长文本、空 Claim、恶意指令和脏 JSON 场景。Stage 0 的真实 Answer 只用于本地人工抽查，不作为 CI 数量前提。
+输入：Deployment 0 通过；第 6.2 节唯一 AI Schema；至少 30 条确定性合成 Answer fixture，其中包含短文本、长文本、空 Claim、恶意指令和脏 JSON 场景。Stage 0 的真实 Answer 只用于本地人工抽查，不作为 CI 数量前提。
 
 任务：
 
@@ -333,7 +383,7 @@ zhiye/
 
 停止条件：模型无法稳定输出 Schema、有效 Claim 覆盖率低于 60%，或必须向模型发送未授权全文才能达到效果。有效 Claim 覆盖率固定定义为“抽查中至少保存 1 条有效 Claim 的非空 ContentText Answer 数 ÷ 被抽查的非空 ContentText Answer 总数”；分母为 0 时直接停止并报告样本不可用。
 
-预计：3 到 4 天。
+预计：1 个集中冲刺日。
 
 ### Stage 5 概念归一化与图谱构建
 
@@ -359,7 +409,7 @@ zhiye/
 
 停止条件：必须引入图数据库才能完成 1-hop 查询；不存在能让两组标注集分别同时满足误合并/误连与漏合并/漏连上限的阈值；或需要加入未批准的新节点/关系类型。
 
-预计：3 到 4 天。
+预计：1 个集中冲刺日。
 
 ### Stage 6 三栏 Web 界面
 
@@ -382,9 +432,13 @@ zhiye/
 
 停止条件：产品要求改为移动端优先、需要新增设计系统，或图规模超出 Sigma.js 在本 MVP 数据量下的稳定渲染能力。
 
-预计：3 到 5 天。
+MVP Freeze：人工验收通过后立即记录一个可回滚 commit/tag 候选，锁定 Stage 3–6 的演示路径、三个预置问题和缓存数据。未先冻结 P0 版本，不进入 Stage 7–8。
+
+预计：1 个集中冲刺日。
 
 ### Stage 7 双向联动
+
+优先级：P1 加分项。若只剩 48 小时或 P0 尚不稳定，跳过本阶段并直接进入 Stage 9。
 
 目标：回答列表、图谱和待传给 AI 的选中上下文状态一致。
 
@@ -404,9 +458,11 @@ zhiye/
 
 停止条件：联动要求扩展到当前四种节点以外，或需要全局跨 Query 状态才能满足交互。
 
-预计：2 到 3 天。
+预计：半天。
 
 ### Stage 8 Graph-enhanced RAG
+
+优先级：P1 加分项。只有冻结版本稳定、LLM 预算明确且 Stage 7 已通过时才开始。
 
 目标：只基于已保存的知乎返回内容生成多观点答案。
 
@@ -430,34 +486,43 @@ zhiye/
 
 停止条件：Citation 无法可靠约束到当前 Query、模型必须访问外部网页才能回答，或需要复杂多跳图算法才能满足要求。
 
-预计：3 到 5 天。
+预计：半天到 1 个集中冲刺日。
 
 ### Stage 9 端到端验收与演示
 
 目标：证明完整闭环可重复运行。
 
-输入：Stage 0 到 Stage 8 全部通过；专用测试数据库；3 个手工真实查询；完整启动和故障排查文档草稿。
+输入：Stage 3–6 与 Deployment 0 已通过并完成 MVP Freeze；Stage 7–8 已通过或已明确跳过；专用测试数据库；3 个预置问题；完整启动和故障排查文档草稿。
 
 任务：
 
 1. 建立 Playwright 主流程和错误流程。
 2. 运行 lint、typecheck、backend unit/integration、frontend unit、e2e。
-3. 用至少 3 个真实自然语言问题做手工验收，记录 API 日期、结果数和限制。
+3. 用至少 3 个预置自然语言问题做手工验收；允许使用此前真实运行后保存的数据库结果作为演示 fallback，并清楚标记缓存时间与数据范围。
 4. 验证首次启动、数据库 migration、失败重试，并只清空专用、可丢弃的测试数据库后重新运行；不得删除真实或用户数据。
 5. 完成 README、环境变量、启动/停止、测试和故障排查文档。
-6. 记录真实调用耗时、LLM Token、单次成本和节点数量。
+6. 记录真实调用耗时、LLM Token、单次成本、节点数量和线上部署 commit。
+7. 准备约 3 分钟演示脚本：问题输入 → Answer 列表 → Claim/Concept 图谱 → 节点联动或只读上下文 → 来源跳转；只有 Stage 8 完成时才演示 AI 继续提问。
 
 自动化验收：Playwright 主流程和错误流程通过；lint、typecheck、backend unit/integration、frontend unit、e2e 全通过；专用测试数据库可重建；Secret 扫描无发现。
 
-人工验收：在本地开发机、Chrome 稳定版、Docker 冷启动完成后，用 3 个真实问题分别跑通 Answer 排序、Claim、图谱、AI Citation 和原文跳转；记录每次端到端耗时而不设第三方网络硬 SLA。演示过程中不手工改数据库；README 可由另一位执行者复现 mock 模式启动。
+人工验收：在本地开发机与公网演示环境分别跑通 P0 链路：输入问题、Answer 排序、Claim、图谱和原文跳转；Stage 8 已完成时再验收 AI Citation。记录每次端到端耗时而不设第三方网络硬 SLA。演示过程中不手工改数据库；README 可由另一位执行者复现 mock 模式启动。
 
-停止条件：任一全局验收标准失败、测试需要真实 Secret 才能运行、演示必须手工改数据库，或用户要求直接部署生产环境。
+停止条件：任一 P0 全局验收标准失败、测试需要真实 Secret 才能运行、演示必须手工改数据库，或线上与本地 fallback 都不可用。
 
-预计：2 到 4 天。
+预计：半天到 1 个集中冲刺日。
+
+### 48 小时保命方案
+
+如果剩余时间不足 48 小时，立即冻结范围：跳过 Stage 7、Stage 8、复杂相似边、embedding 概念合并、聊天历史和高级动画；Concept 只做确定性规范化，图谱只保留主链与必要的同 Query 相似边。
+
+最低成功链路固定为：输入问题 → 获取或读取已缓存的知乎 Answer → 生成带证据的 Summary/Claim → 生成 Query/Answer/Claim/Concept 图谱 → 点击 Answer/Claim 回到来源。知乎 API、LLM、Railway 或 Neon 临时异常时，优先展示比赛前已验证并带缓存时间的结果；右栏退化为 Selected Context，不伪造 Chat 或 Citation。
 
 ## 9. 全局验收标准
 
 ### 9.1 功能验收
+
+P0 参赛门必须满足 F-01 到 F-09、F-11 和 F-12。F-10 属于 Stage 8 的 P1 门；如果 Stage 8 明确跳过，不阻塞 P0 冻结和比赛提交，但界面不得显示可用的 AI 问答或 Citation。
 
 | 编号 | 标准 | 判定方法 |
 |---|---|---|
@@ -479,6 +544,7 @@ zhiye/
 - 后端核心领域逻辑分支覆盖率不低于 80%；过滤、排序、Claim 证据和 Graph Edge 派生必须 100% 分支覆盖。
 - TypeScript strict 和 Python 类型检查通过；lint 无 error。
 - CI 不依赖真实知乎、真实 LLM 或真实 Secret。
+- Deployment 0 的 Web、API、DB 使用同一已记录 commit 和 migration 版本；公网健康检查不把知乎或 LLM 当成硬依赖。
 - 在固定合成 fixture、mock 知乎与 mock LLM、Docker 已启动的本地开发机上，10 次端到端测试的 p95 不超过 10 秒。真实外部调用只记录耗时，90 秒是体验目标而非发布硬门；超时期间必须持续提供阶段状态。
 - API 错误返回稳定 error code；页面对空结果、鉴权、限流、LLM 部分失败有明确提示。
 - 日志中不出现 Access Secret、LLM Key、数据库密码或完整 Authorization Header。
@@ -493,18 +559,20 @@ zhiye/
 
 ## 10. 测试策略与命令约定
 
-具体命令在 Stage 1 根据脚手架写入 `package.json`、`pyproject.toml` 与 README，但统一入口应收敛为：
+仓库当前前端使用 npm，后端使用 pytest。Stage 3 补齐根级统一入口前，使用以下实际命令：
 
 ```powershell
 docker compose up -d --build
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm test:e2e
-& '.\.venv\Scripts\python.exe' -m pytest apps/api/tests
+& '.\apps\api\.venv\Scripts\python.exe' -m pytest apps/api/tests
+Push-Location apps/web
+npm run lint
+npm run typecheck
+npm test
+npm run build
+Pop-Location
 ```
 
-如果 Python 包不通过 pnpm 管理，README 必须给出锁定解释器的等价 `pytest` 命令。Agent 只能报告实际执行过的命令与结果。
+Stage 9 再补充根级 Playwright E2E 命令。README 必须给出锁定解释器的等价 `pytest` 命令；Agent 只能报告实际执行过的命令与结果。
 
 测试分层：
 
@@ -527,6 +595,8 @@ pnpm test:e2e
 | 概念错误合并 | 中 | 图结构误导 | 高阈值候选、低置信度不合并、fixture 人工审查 |
 | 后台任务进程重启 | 中 | Job 中断 | 数据库状态、启动恢复为 failed、用户可重试 |
 | 外部内容 XSS/提示注入 | 高 | 前端或模型受攻击 | 纯文本渲染、HTML 清洗、Prompt 明确外部内容不可信 |
+| 首次部署过晚 | 高 | CORS、PORT、migration 问题集中到比赛前 | Stage 3 后立即执行 Deployment 0，记录部署 commit |
+| 云平台或第三方现场故障 | 高 | Demo 无法实时运行 | 三个预置问题、带缓存时间的数据库结果、本地 fallback |
 | 开发范围膨胀 | 高 | 无法按期交付 | AGENTS.md、Stage 门禁、Backlog、禁止提前实现 |
 
 ## 12. 每阶段交付记录模板
@@ -539,6 +609,7 @@ pnpm test:e2e
 - Migration：
 - 测试命令与结果：
 - 真实知乎 API 验证：已验证 / 未验证
+- 公网部署验证：已验证 / 未验证 / 本阶段不适用
 - 验收标准：通过 / 未通过
 - 已知限制：
 - 下一阶段入口：
@@ -551,24 +622,27 @@ pnpm test:e2e
 ```text
 请在 D:\AI\zhiye 仓库内按照 D:\AI\zhiye\docs\IMPLEMENTATION_PLAN.md 实现“知辨”小型 MVP，并把 D:\AI\zhiye\AGENTS.md 视为仓库级强制规则。
 
-工作边界：当前目录如尚未初始化 Git，先完成实施前置动作，初始化 Git 并创建 feat/zhibian-mvp 分支；在 Stage 0 写入任何 fixture、测试或审计记录之前确认分支，不得直接修改 main。保护 Zhibian_MVP_Architecture_and_Execution_Plan_v0.2.docx，不得修改、移动或删除。不要触碰仓库外文件，不要使用 git reset --hard，不要提交任何真实 Secret 或真实知乎响应。
+计划路径：D:\AI\zhiye\docs\IMPLEMENTATION_PLAN.md。工作边界：使用现有 D:\AI\zhiye 工作区和 feat/zhibian-mvp 分支，不得直接修改 main，不得创建额外 worktree。保护 Zhibian_MVP_Architecture_and_Execution_Plan_v0.2.docx，不得修改、移动或删除。不要触碰仓库外文件，不要使用 git reset --hard，不要提交任何真实 Secret、数据库连接串或真实知乎响应。
 
 核心目标：用户输入自然语言问题；官方知乎搜索单次 Count=10；只保留返回结果中的 Answer；按 VoteUpCount 降序；每条 Answer 从 ContentText 提取 0 到 5 个带证据 Claim；构建 QUERY → ANSWER → CLAIM → CONCEPT 图谱；点击 Answer/Claim 跳知乎原文；页面始终显示“观点基于知乎搜索返回内容生成，可能不包含原回答全部信息”。
 
-执行方式：先完成实施前置动作，再严格按 Stage 0 到 Stage 9 顺序推进。先写失败测试，再做最小实现，再运行该阶段全部测试。Stage 0 是硬门；若官方接口、权限、额度或关键字段不满足要求，立即停止，不得改用爬虫、私有接口或未授权数据源。每个 Stage 未通过验收不得进入下一阶段，并将记录写入 docs/progress/STAGE_N.md。
+执行方式：Stage 0–2 已完成，从 Stage 3 开始。顺序固定为 Stage 3 → Deployment 0 → Stage 4 → Stage 5 → Stage 6 → MVP Freeze；稳定后再做 P1 的 Stage 7–8，最后进入 Stage 9。每个行为先写失败测试，再做最小实现，再运行该阶段全部测试。每个 Stage 未通过验收不得进入下一阶段；Stage 记录写入 docs/progress/STAGE_N.md，首次部署记录写入 docs/progress/DEPLOYMENT_0.md。
+
+部署边界：Deployment 0 的目标是 Vercel apps/web、Railway apps/api、Neon PostgreSQL + pgvector。创建云资源、写入 Secret、产生费用或公开发布前必须取得用户明确授权；未授权时停止在 Deployment 0，不得自行改用其他平台。线上 migration 只能作用于本项目专用数据库。
 
 验证要求：运行 lint、typecheck、后端单元/集成、前端单元和 Playwright E2E；只报告真实执行结果。CI 使用脱敏 fixture，不调用真实知乎或 LLM。真实 API 验证与模拟测试必须分别说明。
 
-最终交付：总结完成的 Stage、用户可见功能、修改文件、Migration、实际测试命令及通过数量、真实知乎 API 是否验证、剩余风险和未完成项。不要把测试通过描述为生产就绪。
+最终交付：总结完成的 Stage、P0/P1 状态、用户可见功能、修改文件、Migration、实际测试命令及通过数量、真实知乎 API 是否验证、公网部署是否验证、剩余风险和未完成项。不要把测试通过描述为生产就绪。
 ```
 
 ## 14. 开始实施前检查清单
 
-- [ ] 用户已明确要求开始编码，而不只是审阅计划。
+- [ ] 用户已明确要求从 Stage 3 继续编码，而不只是审阅计划。
 - [ ] 已读取根目录 `AGENTS.md`。
-- [ ] 已确认当前 Stage 与验收标准。
-- [ ] 已完成实施前置动作，并确认当前分支为 `feat/zhibian-mvp`。
+- [ ] 已读取 `docs/progress/STAGE_0.md` 到 `STAGE_2.md`，确认当前入口为 Stage 3。
+- [ ] 已确认当前分支为现有 `feat/zhibian-mvp`，且 `git status` 中没有无法解释的改动。
 - [ ] 已确认 DOCX 受保护且不需要修改。
 - [ ] Stage 0 所需 Access Secret 只存在于安全环境变量或凭据存储。
 - [ ] 已为当前行为先写失败测试。
 - [ ] 未把 Backlog 功能混入当前 Stage。
+- [ ] 进入 Deployment 0 前已单独取得创建云资源、配置 Secret 和公开发布的授权。

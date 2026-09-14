@@ -41,8 +41,11 @@ class SearchItemDTO(BaseModel):
     ranking_score: float = Field(
         default=0.0,
         ge=0.0,
-        le=1.0,
-        description="Zhihu internal relevance score (0.0 – 1.0)",
+        description=(
+            "Zhihu internal relevance score.  Real API responses can "
+            "exceed 1.0 (observed up to ~1.9 in Stage-0 fixtures), so "
+            "only non-negativity is enforced."
+        ),
     )
 
     # ── validators ────────────────────────────────────────────────────
@@ -67,10 +70,14 @@ class SearchItemDTO(BaseModel):
 
     @field_validator("ranking_score")
     @classmethod
-    def _validate_ranking_score_range(cls, v: float) -> float:
-        """Reject ranking scores outside the expected [0.0, 1.0] range."""
-        if v < 0.0 or v > 1.0:
-            msg = f"ranking_score must be in [0.0, 1.0], got {v}"
+    def _validate_ranking_score_non_negative(cls, v: float) -> float:
+        """Reject negative ranking scores (defensive).
+
+        Upper bound is NOT enforced: real API responses can exceed 1.0
+        (observed ~1.9 in Stage-0 fixtures).
+        """
+        if v < 0.0:
+            msg = f"ranking_score must be >= 0, got {v}"
             raise ValueError(msg)
         return v
 

@@ -1,0 +1,14 @@
+{
+  "summary": "确定支持考研",
+  "stance": "support",
+  "claims": [
+    {
+      "text": "考研能显著提升竞争力",
+      "evidence_text": "考研能显著提升竞争力",
+      "confidence": 1.0,
+      "concepts": [
+        "考研"
+      ]
+    }
+  ]
+}

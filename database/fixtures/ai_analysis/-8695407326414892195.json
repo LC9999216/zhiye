@@ -1,0 +1,30 @@
+{
+  "summary": "计算机专业就业需关注去初级化和硬科技趋势",
+  "stance": "conditional",
+  "claims": [
+    {
+      "text": "就业市场去初级化，三年经验岗位占比超七成",
+      "evidence_text": "2026年春招要求3年以上工作经验的岗位占比超过70%",
+      "confidence": 0.9,
+      "concepts": [
+        "就业"
+      ]
+    },
+    {
+      "text": "硬科技崛起，信息安全月薪7548元位列第四",
+      "evidence_text": "信息安全仍以7548元位列第四",
+      "confidence": 0.9,
+      "concepts": [
+        "信息安全"
+      ]
+    },
+    {
+      "text": "企业看重算法与数据结构、真实项目经验和AI驾驭能力",
+      "evidence_text": "企业看计算机学生盯的是以下几个东西",
+      "confidence": 0.9,
+      "concepts": [
+        "计算机"
+      ]
+    }
+  ]
+}

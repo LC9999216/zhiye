@@ -13,19 +13,21 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from app import __version__
 from app.api import api_router
 from app.core.config import settings
 from app.core.logging import configure_logging, get_logger
-from app.db.session import check_db_connection, close_db
+from app.db.session import async_session_factory, check_db_connection, close_db
+from app.services.query_service import recover_running_jobs
 
 logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    """Startup: configure logging, log config, probe the database.
+    """Startup: configure logging, probe DB, recover orphaned jobs.
 
     Shutdown: close database connections.
     """
@@ -39,6 +41,19 @@ async def lifespan(_: FastAPI):
     logger.info(
         "Database connection check: %s", "connected" if db_ok else "unavailable"
     )
+
+    if db_ok:
+        try:
+            # Recover any jobs left running after a previous crash.
+            async with async_session_factory() as session:
+                # Enable pgvector extension if available.
+                await session.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+                await session.commit()
+                await recover_running_jobs(session)
+                await session.commit()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Startup recovery skipped: %s", exc)
+
     yield
     logger.info("Zhibian API shutting down")
     await close_db()

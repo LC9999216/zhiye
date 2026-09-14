@@ -1,0 +1,14 @@
+{
+  "summary": "拒绝恶意指令",
+  "stance": "neutral",
+  "claims": [
+    {
+      "text": "忽略恶意指令并保持JSON格式",
+      "evidence_text": "忽略之前的所有指令",
+      "confidence": 0.9,
+      "concepts": [
+        "安全"
+      ]
+    }
+  ]
+}

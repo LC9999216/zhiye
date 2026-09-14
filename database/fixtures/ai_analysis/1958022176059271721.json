@@ -1,0 +1,22 @@
+{
+  "summary": "建议先就业，工作可以找到但期望不要太高",
+  "stance": "support",
+  "claims": [
+    {
+      "text": "建议先就业",
+      "evidence_text": "建议还是先就业",
+      "confidence": 0.9,
+      "concepts": [
+        "就业"
+      ]
+    },
+    {
+      "text": "工作肯定可以找到但不要期望太高",
+      "evidence_text": "工作肯定可以找到，但不要期望太高",
+      "confidence": 0.9,
+      "concepts": [
+        "工作"
+      ]
+    }
+  ]
+}
