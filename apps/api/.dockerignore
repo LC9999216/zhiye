@@ -1,0 +1,22 @@
+# Secrets — never bake .env files into an image
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# VCS / IDE / OS
+.git/
+.gitignore
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

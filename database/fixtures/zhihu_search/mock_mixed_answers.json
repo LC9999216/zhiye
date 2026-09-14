@@ -1,0 +1,90 @@
+{
+  "Code": 0,
+  "Message": "success",
+  "Data": {
+    "HasMore": false,
+    "SearchHashId": "mock-fixture-search-hash-001",
+    "Items": [
+      {
+        "Title": "计算机专业考研还是就业？一位过来人的建议 - 知乎",
+        "ContentType": "Answer",
+        "ContentID": "mock-content-id-001",
+        "ContentText": "考研还是就业，取决于你的个人目标。如果想去大厂做算法岗，建议考研；如果只是想做开发，本科就够了。计算机专业更看重实际能力，而不是学历本身。很多大厂招聘时更关注你的项目经验和代码能力。",
+        "Url": "https://www.zhihu.com/question/123456/answer/mock001?utm_medium=openapi_platform&utm_source=mock",
+        "CommentCount": 15,
+        "VoteUpCount": 128,
+        "AuthorName": "编程达人",
+        "AuthorAvatar": "https://example.com/avatar1.jpg",
+        "AuthorBadge": "",
+        "AuthorBadgeText": "",
+        "EditTime": 1700000000,
+        "AuthorityLevel": "3",
+        "RankingScore": 0.95
+      },
+      {
+        "Title": "计算机专业考研还是就业？深度分析 - 知乎",
+        "ContentType": "Answer",
+        "ContentID": "mock-content-id-002",
+        "ContentText": "计算机专业考研的性价比在降低。传统的观点认为读研能提高就业竞争力，但现在企业更看重实际项目经验。如果你能考上985的研，那值得读；如果是普通学校平读，不如直接就业积累经验。",
+        "Url": "https://www.zhihu.com/question/123456/answer/mock002?utm_medium=openapi_platform&utm_source=mock",
+        "CommentCount": 8,
+        "VoteUpCount": 256,
+        "AuthorName": "技术老鸟",
+        "AuthorAvatar": "https://example.com/avatar2.jpg",
+        "AuthorBadge": "",
+        "AuthorBadgeText": "",
+        "EditTime": 1700010000,
+        "AuthorityLevel": "3",
+        "RankingScore": 0.92
+      },
+      {
+        "Title": "我的计算机考研与就业经历 - 知乎",
+        "ContentType": "Answer",
+        "ContentID": "mock-content-id-003",
+        "ContentText": "我本科毕业后直接工作了三年，然后读研。回头看，工作经历让我读研时更能理解理论知识。计算机行业变化快，早入行能积累经验，但学历门槛也确实存在。建议根据自己的情况权衡。",
+        "Url": "https://www.zhihu.com/question/123456/answer/mock003?utm_medium=openapi_platform&utm_source=mock",
+        "CommentCount": 24,
+        "VoteUpCount": 512,
+        "AuthorName": "行者无疆",
+        "AuthorAvatar": "https://example.com/avatar3.jpg",
+        "AuthorBadge": "",
+        "AuthorBadgeText": "",
+        "EditTime": 1700020000,
+        "AuthorityLevel": "4",
+        "RankingScore": 0.89
+      },
+      {
+        "Title": "计算机专业就业方向分析文章 - 知乎",
+        "ContentType": "Article",
+        "ContentID": "mock-content-id-004",
+        "ContentText": "这篇文章详细分析了计算机专业毕业生的就业方向，包括后端开发、前端开发、算法工程师、产品经理等。适合正在考虑就业方向的同学阅读。",
+        "Url": "https://zhuanlan.zhihu.com/p/mock004?utm_medium=openapi_platform&utm_source=mock",
+        "CommentCount": 5,
+        "VoteUpCount": 34,
+        "AuthorName": "职场观察者",
+        "AuthorAvatar": "https://example.com/avatar4.jpg",
+        "AuthorBadge": "",
+        "AuthorBadgeText": "",
+        "EditTime": 1700030000,
+        "AuthorityLevel": "2",
+        "RankingScore": 0.75
+      },
+      {
+        "Title": "双非计算机学生的考研之路 - 知乎",
+        "ContentType": "Answer",
+        "ContentID": "mock-content-id-005",
+        "ContentText": "作为一名双非院校的计算机学生，我选择了考研这条路。虽然过程艰苦，但最终考上了985的研究生。现在在华为做算法工程师，薪资和发展都比本科同学好很多。但这个过程需要付出极大的努力。",
+        "Url": "https://www.zhihu.com/question/123456/answer/mock005?utm_medium=openapi_platform&utm_source=mock",
+        "CommentCount": 42,
+        "VoteUpCount": 64,
+        "AuthorName": "逆袭者",
+        "AuthorAvatar": "https://example.com/avatar5.jpg",
+        "AuthorBadge": "",
+        "AuthorBadgeText": "",
+        "EditTime": 1700040000,
+        "AuthorityLevel": "3",
+        "RankingScore": 0.85
+      }
+    ]
+  }
+}
