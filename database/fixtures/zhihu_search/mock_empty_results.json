@@ -1,0 +1,9 @@
+{
+  "Code": 0,
+  "Message": "success",
+  "Data": {
+    "HasMore": false,
+    "SearchHashId": "mock-empty-hash-002",
+    "Items": []
+  }
+}

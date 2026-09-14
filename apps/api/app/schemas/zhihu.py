@@ -1,0 +1,93 @@
+"""Internal DTOs for Zhihu search results.
+
+These Pydantic models are the canonical internal representation of a
+Zhihu Open Platform search response.  Every field has been mapped from
+the raw API JSON keys (Title, ContentID, …) to snake_case Python names
+so that the rest of the codebase never depends on the API's casing.
+"""
+
+from __future__ import annotations
+
+from pydantic import BaseModel, Field, field_validator
+
+
+class SearchItemDTO(BaseModel):
+    """A single item from a Zhihu search result.
+
+    Maps directly from the ``Data.Items[ ]`` entries returned by the
+    Zhihu Open Platform search endpoint.
+    """
+
+    original_index: int = Field(
+        description="0-based position of this item in the original API response"
+    )
+    title: str = Field(description="Item title (as returned by the API)")
+    content_type: str = Field(
+        description="Content type, e.g. ``Answer``, ``Article``, …"
+    )
+    content_id: str = Field(description="Unique content identifier from Zhihu")
+    content_text: str = Field(
+        description="Content snippet/summary, stripped of ``<em>`` tags"
+    )
+    url: str = Field(description="Zhihu URL pointing to the original content")
+    voteup_count: int = Field(
+        ge=0, description="Number of up-votes received by this content"
+    )
+    author_name: str = Field(default="", description="Display name of the author")
+    edit_time: int = Field(
+        default=0,
+        description="Last edit time as a Unix-epoch timestamp (seconds)",
+    )
+    ranking_score: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Zhihu internal relevance score (0.0 – 1.0)",
+    )
+
+    # ── validators ────────────────────────────────────────────────────
+
+    @field_validator("url")
+    @classmethod
+    def _validate_url_contains_zhihu(cls, v: str) -> str:
+        """Ensure the URL points to a ``zhihu.com`` domain."""
+        if "zhihu.com" not in v.lower():
+            msg = f"URL does not contain 'zhihu.com': {v!r}"
+            raise ValueError(msg)
+        return v
+
+    @field_validator("voteup_count")
+    @classmethod
+    def _validate_voteup_non_negative(cls, v: int) -> int:
+        """Reject negative vote counts (defensive)."""
+        if v < 0:
+            msg = f"voteup_count must be >= 0, got {v}"
+            raise ValueError(msg)
+        return v
+
+    @field_validator("ranking_score")
+    @classmethod
+    def _validate_ranking_score_range(cls, v: float) -> float:
+        """Reject ranking scores outside the expected [0.0, 1.0] range."""
+        if v < 0.0 or v > 1.0:
+            msg = f"ranking_score must be in [0.0, 1.0], got {v}"
+            raise ValueError(msg)
+        return v
+
+
+class SearchResponseDTO(BaseModel):
+    """The fully-parsed result of a Zhihu search query.
+
+    This is the top-level DTO returned by every ``search()`` call,
+    regardless of the underlying provider (real or mock).
+    """
+
+    search_hash_id: str = Field(
+        description="Unique hash id for this search result batch"
+    )
+    has_more: bool = Field(
+        description="Whether the API indicates there are more results"
+    )
+    items: list[SearchItemDTO] = Field(
+        default_factory=list, description="Result items in pipeline order"
+    )
