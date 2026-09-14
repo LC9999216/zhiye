@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from pathlib import Path
 
 from app.core.exceptions import (
@@ -76,6 +77,13 @@ class MockSearchProvider:
         self._fixture_dir = Path(fixture_dir)
         logger.info("MockSearchProvider fixture dir: %s", self._fixture_dir)
 
+        # Optional override: MOCK_SEARCH_FIXTURE=... selects a different
+        # default fixture (e.g. the demo closed-loop one) without touching
+        # the test contract for the built-in default.
+        self._default_fixture = os.environ.get(
+            "MOCK_SEARCH_FIXTURE", _DEFAULT_FIXTURE
+        )
+
     # ── public API ────────────────────────────────────────────────────
 
     async def search(
@@ -92,7 +100,7 @@ class MockSearchProvider:
         # Ignore query_text / count — the mock always returns the fixture.
         _ = query_text, count
 
-        name = fixture_name or _DEFAULT_FIXTURE
+        name = fixture_name or self._default_fixture
         fixture_path = self._fixture_dir / name
 
         if not fixture_path.is_file():

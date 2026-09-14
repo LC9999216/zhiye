@@ -50,6 +50,99 @@ export interface HealthResponse {
 }
 
 // ---------------------------------------------------------------------------
+// Stage 6: query/job/answers/graph 类型（与后端 DTO 对齐）
+// ---------------------------------------------------------------------------
+
+/** POST /api/queries/analyze 的 202 响应。 */
+export interface AnalyzeResponse {
+  job_id: string;
+  query_id: string;
+  job_url: string;
+}
+
+/** GET /api/jobs/{id} 的 Job 状态。 */
+export interface JobResponse {
+  id: string;
+  query_id: string;
+  status: JobStatus;
+  current_step: string;
+  error_code: string | null;
+  error_message: string | null;
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  updated_at: string;
+  query_url: string | null;
+  answers_url: string | null;
+  graph_url: string | null;
+}
+
+/** 后端 Job 状态机（与 stores/search.ts 的 SearchStatus 对齐）。 */
+export type JobStatus =
+  | "pending"
+  | "fetching"
+  | "analyzing"
+  | "building"
+  | "completed"
+  | "failed";
+
+/** GET /api/queries/{id}/answers 的单条 Answer。 */
+export interface AnswerItem {
+  id: string;
+  content_id: string;
+  title: string;
+  author_name: string;
+  content_text: string;
+  voteup_count: number;
+  url: string;
+  original_index: number;
+  summary: string | null;
+  stance: string | null;
+  claim_count: number;
+}
+
+/** GET /api/queries/{id}/answers 的响应。 */
+export interface AnswersResponse {
+  query_id: string;
+  query_text: string;
+  answers: AnswerItem[];
+  total: number;
+}
+
+/** GET /api/queries/{id}/graph 的节点类型。 */
+export type GraphNodeType = "QUERY" | "ANSWER" | "CLAIM" | "CONCEPT";
+
+/** GET /api/queries/{id}/graph 的节点。 */
+export interface GraphNode {
+  id: string;
+  type: GraphNodeType;
+  label: string;
+  url?: string | null;
+  extra: Record<string, unknown>;
+}
+
+/** GET /api/queries/{id}/graph 的边类型。 */
+export type GraphEdgeType =
+  | "RETURNS_ANSWER"
+  | "MAKES_CLAIM"
+  | "REFERS_TO"
+  | "SIMILAR_TO";
+
+/** GET /api/queries/{id}/graph 的边。 */
+export interface GraphEdge {
+  source: string;
+  target: string;
+  type: GraphEdgeType;
+}
+
+/** GET /api/queries/{id}/graph 的响应。 */
+export interface GraphResponse {
+  query_id: string;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
+// ---------------------------------------------------------------------------
 // 错误处理
 // ---------------------------------------------------------------------------
 
@@ -133,10 +226,22 @@ export const api = {
   health: (): Promise<HealthResponse> =>
     request<HealthResponse>("/api/health"),
 
-  // 以下接口在后续 Stage 启用：
-  // POST /api/queries/analyze     （Stage 3）
-  // GET  /api/jobs/{id}           （Stage 3）
-  // GET  /api/queries/{id}/answers（Stage 3）
-  // GET  /api/queries/{id}/graph  （Stage 5）
-  // POST /api/chat                （Stage 8）
+  /** POST /api/queries/analyze — 提交问题，创建分析 Job。 */
+  analyze: (queryText: string): Promise<AnalyzeResponse> =>
+    request<AnalyzeResponse>("/api/queries/analyze", {
+      method: "POST",
+      body: JSON.stringify({ query_text: queryText }),
+    }),
+
+  /** GET /api/jobs/{id} — 轮询 Job 状态。 */
+  getJob: (jobId: string): Promise<JobResponse> =>
+    request<JobResponse>(`/api/jobs/${jobId}`),
+
+  /** GET /api/queries/{id}/answers — 已排序的回答列表。 */
+  getAnswers: (queryId: string): Promise<AnswersResponse> =>
+    request<AnswersResponse>(`/api/queries/${queryId}/answers`),
+
+  /** GET /api/queries/{id}/graph — 知识图谱节点与边。 */
+  getGraph: (queryId: string): Promise<GraphResponse> =>
+    request<GraphResponse>(`/api/queries/${queryId}/graph`),
 };

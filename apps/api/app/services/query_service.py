@@ -15,12 +15,13 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.models.answer import Answer
+from app.models.claim import Claim
 from app.models.job import Job
 from app.models.query import Query
 from app.schemas.api import AnalyzeResponse, AnswerItem, AnswersResponse, JobResponse, QueryResponse
@@ -247,6 +248,17 @@ async def build_answers_response(
     )
     answers = result.scalars().all()
 
+    # Claim counts in one query — async lazy-loading (a.claims) would raise
+    # MissingGreenlet; a single aggregate avoids the N+1 and the await issue.
+    claim_counts: dict[uuid.UUID, int] = {}
+    if answers:
+        count_result = await session.execute(
+            select(Claim.answer_id, func.count(Claim.id))
+            .where(Claim.query_id == query.id)
+            .group_by(Claim.answer_id)
+        )
+        claim_counts = dict(count_result.all())
+
     items = [
         AnswerItem(
             id=a.id,
@@ -259,7 +271,7 @@ async def build_answers_response(
             original_index=a.original_index,
             summary=a.summary,
             stance=a.stance,
-            claim_count=len(a.claims) if a.claims else 0,
+            claim_count=claim_counts.get(a.id, 0),
         )
         for a in answers
     ]

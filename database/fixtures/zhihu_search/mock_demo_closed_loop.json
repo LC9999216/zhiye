@@ -1,0 +1,90 @@
+{
+  "Code": 0,
+  "Message": "success",
+  "Data": {
+    "HasMore": false,
+    "SearchHashId": "mock-demo-closed-loop-001",
+    "Items": [
+      {
+        "Title": "考研能提升学历竞争力 - 知乎",
+        "ContentType": "Answer",
+        "ContentID": "a-short-01",
+        "ContentText": "考研能提升学历竞争力",
+        "Url": "https://www.zhihu.com/question/123456/answer/demo01?utm_medium=openapi_platform&utm_source=mock",
+        "CommentCount": 15,
+        "VoteUpCount": 512,
+        "AuthorName": "编程达人",
+        "AuthorAvatar": "https://example.com/avatar1.jpg",
+        "AuthorBadge": "",
+        "AuthorBadgeText": "",
+        "EditTime": 1700000000,
+        "AuthorityLevel": "3",
+        "RankingScore": 1.6
+      },
+      {
+        "Title": "就业更看重实际经验 - 知乎",
+        "ContentType": "Answer",
+        "ContentID": "a-short-02",
+        "ContentText": "就业更看重实际经验",
+        "Url": "https://www.zhihu.com/question/123456/answer/demo02?utm_medium=openapi_platform&utm_source=mock",
+        "CommentCount": 8,
+        "VoteUpCount": 256,
+        "AuthorName": "技术老鸟",
+        "AuthorAvatar": "https://example.com/avatar2.jpg",
+        "AuthorBadge": "",
+        "AuthorBadgeText": "",
+        "EditTime": 1700010000,
+        "AuthorityLevel": "3",
+        "RankingScore": 1.2
+      },
+      {
+        "Title": "两者可以结合考虑 - 知乎",
+        "ContentType": "Answer",
+        "ContentID": "a-short-03",
+        "ContentText": "两者可以结合考虑",
+        "Url": "https://www.zhihu.com/question/123456/answer/demo03?utm_medium=openapi_platform&utm_source=mock",
+        "CommentCount": 24,
+        "VoteUpCount": 128,
+        "AuthorName": "行者无疆",
+        "AuthorAvatar": "https://example.com/avatar3.jpg",
+        "AuthorBadge": "",
+        "AuthorBadgeText": "",
+        "EditTime": 1700020000,
+        "AuthorityLevel": "4",
+        "RankingScore": 1.0
+      },
+      {
+        "Title": "考研太卷不建议 - 知乎",
+        "ContentType": "Answer",
+        "ContentID": "a-short-04",
+        "ContentText": "考研太卷不建议",
+        "Url": "https://www.zhihu.com/question/123456/answer/demo04?utm_medium=openapi_platform&utm_source=mock",
+        "CommentCount": 10,
+        "VoteUpCount": 96,
+        "AuthorName": "理性派",
+        "AuthorAvatar": "https://example.com/avatar4.jpg",
+        "AuthorBadge": "",
+        "AuthorBadgeText": "",
+        "EditTime": 1700030000,
+        "AuthorityLevel": "3",
+        "RankingScore": 0.95
+      },
+      {
+        "Title": "考研系统化理论基础，就业快速积累实践 - 知乎",
+        "ContentType": "Answer",
+        "ContentID": "a-two-01",
+        "ContentText": "考研系统化理论基础，就业快速积累实践",
+        "Url": "https://www.zhihu.com/question/123456/answer/demo05?utm_medium=openapi_platform&utm_source=mock",
+        "CommentCount": 30,
+        "VoteUpCount": 64,
+        "AuthorName": "过来人",
+        "AuthorAvatar": "https://example.com/avatar5.jpg",
+        "AuthorBadge": "",
+        "AuthorBadgeText": "",
+        "EditTime": 1700040000,
+        "AuthorityLevel": "4",
+        "RankingScore": 0.9
+      }
+    ]
+  }
+}

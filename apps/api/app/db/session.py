@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import ssl
 from collections.abc import AsyncIterator
 
 from sqlalchemy import text
@@ -19,12 +20,20 @@ from app.core.logging import get_logger
 logger = get_logger(__name__)
 
 # Health probes must not hang for the whole asyncpg connect timeout.
-DB_CHECK_TIMEOUT_SECONDS = 2.0
+# Neon cold-start TLS handshakes can take a few seconds; 5s keeps the
+# health endpoint responsive while tolerating managed-DB latency.
+DB_CHECK_TIMEOUT_SECONDS = 5.0
+
+# Neon (and most managed Postgres) require TLS.  asyncpg accepts an
+# ``ssl`` context in connect_args; the ``?ssl=require`` query param alone
+# is not honoured by asyncpg the way psycopg does.
+_SSL_CONTEXT = ssl.create_default_context()
 
 engine: AsyncEngine = create_async_engine(
     settings.database_url,
     echo=False,
     pool_pre_ping=True,
+    connect_args={"ssl": _SSL_CONTEXT},
 )
 
 async_session_factory = async_sessionmaker(

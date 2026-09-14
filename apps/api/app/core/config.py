@@ -26,7 +26,10 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=(".env", "../.env"),
+        # Relative to the process CWD.  From apps/api this covers:
+        #   .env (apps/api), ../.env (apps), ../../.env (repo root)
+        # From the repo root it covers: .env and ../.env.
+        env_file=(".env", "../.env", "../../.env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
