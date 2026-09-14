@@ -16,8 +16,17 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from typing import TYPE_CHECKING
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.answer import Answer
 from app.schemas.zhihu import SearchItemDTO
+
+if TYPE_CHECKING:
+    from app.models.query import Query
+    from app.services import _SearchProvider
 
 # Regex matching <em>, </em>, and <em /> (self-closing) tags (case-insensitive).
 _EM_TAG_PATTERN = re.compile(r"</?em\s*/?>", re.IGNORECASE)
@@ -146,3 +155,51 @@ class SearchPipeline:
         result = cls.truncate(result)
         result = [cls.clean_item_content_text(it) for it in result]
         return result
+
+    # ── fetch + persist (job processor) ───────────────────────────────
+
+    @classmethod
+    async def fetch_and_store(
+        cls,
+        session: AsyncSession,
+        query: Query,
+        provider: _SearchProvider | None = None,
+    ) -> list[SearchItemDTO]:
+        """Search for *query* via the provider, run the pipeline, persist Answers.
+
+        Idempotent per ``(query_id, content_id)``: re-fetching replaces the
+        answer set without duplicates.  Returns the final filtered DTOs.
+        """
+        from app.services import get_search_provider
+
+        provider = provider or get_search_provider()
+        response = await provider.search(query.query_text, count=10)
+
+        items = response.items if response.items is not None else []
+        final = cls.execute_pipeline(items)
+
+        # Persist (delete-then-insert keeps the set in sync with the API).
+        existing = await session.execute(
+            select(Answer.id).where(Answer.query_id == query.id)
+        )
+        for (aid,) in existing.all():
+            await session.delete(await session.get(Answer, aid))
+        await session.flush()
+
+        for idx, item in enumerate(final):
+            session.add(
+                Answer(
+                    query_id=query.id,
+                    content_id=item.content_id,
+                    title=item.title or "",
+                    author_name=item.author_name or "",
+                    content_text=item.content_text or "",
+                    voteup_count=item.voteup_count or 0,
+                    url=item.url or "",
+                    original_index=idx,
+                    edit_time=item.edit_time or 0,
+                    ranking_score=item.ranking_score or 0.0,
+                )
+            )
+        await session.flush()
+        return final

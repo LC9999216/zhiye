@@ -1,0 +1,22 @@
+{
+  "summary": "作者将就业困难与考研歧视都归因于学校背景",
+  "stance": "support",
+  "claims": [
+    {
+      "text": "找到工作被裁员因为学校不好",
+      "evidence_text": "找到工作了被裁员，是因为学校不好",
+      "confidence": 0.9,
+      "concepts": [
+        "就业"
+      ]
+    },
+    {
+      "text": "考研被歧视也因为学校不好",
+      "evidence_text": "考研被歧视，也是因为学校不好",
+      "confidence": 0.9,
+      "concepts": [
+        "考研"
+      ]
+    }
+  ]
+}

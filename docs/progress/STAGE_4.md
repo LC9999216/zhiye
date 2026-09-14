@@ -137,6 +137,16 @@
 3. **Mock embedding 无语义**：SHA-256 种子向量仅供 Stage 5 相似度逻辑测试，不代表真实语义相似。
 4. **Job 编排未接入**：`analyze_query_answers` 已就绪，但尚未挂到 Job 状态机（fetching→analyzing→completed）；计划在 Stage 5/6 完成端到端。
 
+## Stage 4 门禁收口（本会话追加）
+
+在进入 Stage 5 前完成了 Stage 4 的三道门禁（执行方案 6.2）：
+
+1. **PostgreSQL 门禁**：`tests/test_pg_integration.py`（9 项）在 Neon 直连下全部通过——查询幂等、Job 生命周期、Claim 事务替换、position 约束（0/6 拒绝）、复合外键拒绝跨 Query 写入。迁移 `0002_composite_fk` 补齐 `answers.embedding_model` + 5 个复合外键 + 3 个 `(query_id,id)` 唯一约束。
+2. **真实样本门禁**：8 个手注真实答案 fixture（`database/fixtures/ai_analysis/<content_id>.json`，证据串逐一校验为真实 ContentText 子串）；真实样本覆盖率 8/13=61.5% ≥60%（脚本化校验 + `test_real_sample_valid_claim_coverage_above_60_percent` 自动化）。
+3. **生产 Provider 门禁**：`TestProductionProviderGate`（4 项）验证 production 模式下 LLM/Embedding Provider 抛 `NotImplementedError`，mock 模式返回 mock 实例。
+
+**本会话修复**：analysis_service 在删除旧 Claim 与插入新 Claim 之间补 `await session.flush()`，修复同事务内 `uq_claim_position` 唯一约束冲突（Claim 替换测试由此通过）。
+
 ## 下一阶段入口
 
-**Stage 5** — 概念归一化与图谱构建（concepts/claim_concepts/answer_similarities 逻辑 + `/api/queries/{id}/graph`）。
+**Stage 5** — 概念归一化与图谱构建（concepts/claim_concepts/answer_similarities 逻辑 + `/api/queries/{id}/graph`）。已完成，见 `STAGE_5.md`。

@@ -64,6 +64,10 @@ class Claim(TimestampMixin, Base):
         ARRAY(Float), nullable=True
     )
     embedding_model: Mapped[Optional[str]] = mapped_column(String(200))
+    # Raw concept names the LLM attached to this claim, as a JSON array
+    # string (e.g. '["考研", "就业"]').  Graph building (Stage 5) reads
+    # this to materialise ``concepts`` + ``claim_concepts`` rows.
+    concepts_json: Mapped[Optional[str]] = mapped_column(Text)
 
     # ── relationships ────────────────────────────────────────────────
     answer: Mapped[Answer] = relationship("Answer", back_populates="claims")

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,6 +21,7 @@ from app.schemas.api import (
     AnalyzeResponse,
     AnswersResponse,
     ErrorResponse,
+    GraphResponse,
     QueryResponse,
     JobResponse,
 )
@@ -31,6 +32,8 @@ from app.services.query_service import (
     create_job_for_query,
     create_or_get_query,
 )
+from app.services.graph_service import build_graph_response
+from app.services.job_processor import process_job
 
 logger = get_logger(__name__)
 
@@ -50,13 +53,14 @@ _BASE_URL = ""  # Relative URLs — clients resolve against their base.
 )
 async def analyze_query(
     body: AnalyzeRequest,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db),
 ) -> AnalyzeResponse:
     """Submit a natural language question for Zhihu search and analysis.
 
     Returns 202 immediately with a ``job_id`` and ``query_id``.
-    Actual processing (search → AI analysis → graph building) happens
-    asynchronously in the background.
+    Actual processing (search → AI analysis → graph building) runs as a
+    single-process background task, tracked through the ``jobs`` table.
     """
     query, _ = await create_or_get_query(session, body.query_text)
     job, is_new = await create_job_for_query(session, query)
@@ -66,6 +70,18 @@ async def analyze_query(
         logger.info(
             "Reusing active job %s for query %s", job.id, query.id
         )
+    else:
+        # Kick off the job in the background (single-process worker).
+        from app.db.session import async_session_factory
+
+        async def _run() -> None:
+            async with async_session_factory() as bg_session:
+                # Reload the job in this session (avoid detached instance).
+                job_row = await bg_session.get(Job, job.id)
+                if job_row is not None:
+                    await process_job(bg_session, job_row)
+
+        background_tasks.add_task(_run)
 
     return AnalyzeResponse(
         job_id=job.id,
@@ -124,3 +140,34 @@ async def get_answers(
         )
 
     return await build_answers_response(session, query)
+
+
+@router.get(
+    "/{query_id}/graph",
+    summary="Get the knowledge graph for a query",
+    responses={
+        200: {"model": GraphResponse},
+        404: {"model": ErrorResponse, "description": "Query not found"},
+    },
+)
+async def get_graph(
+    query_id: uuid.UUID = Path(..., description="Query UUID"),
+    session: AsyncSession = Depends(get_db),
+) -> GraphResponse:
+    """Return the directly renderable QUERY→ANSWER→CLAIM→CONCEPT graph.
+
+    All edges are derived from authoritative FK tables — no generic edge
+    table, no graph database.  ANSWER and CLAIM nodes carry the Zhihu
+    source URL so clicks open the original answer.
+    """
+    result = await session.execute(
+        select(Query).where(Query.id == query_id)
+    )
+    query = result.scalar_one_or_none()
+    if query is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error_code": "QUERY_NOT_FOUND", "message": "Query not found"},
+        )
+
+    return await build_graph_response(session, query)

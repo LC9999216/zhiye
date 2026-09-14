@@ -164,3 +164,82 @@ def test_mock_provider_fixture_content_is_valid_json() -> None:
             continue
         assert "summary" in data and "stance" in data and "claims" in data
         assert isinstance(data["claims"], list)
+
+
+# ── Real Stage-0 sample audit (Stage 4 close-out) ──────────────────────
+
+# content_id -> real ContentText from the local Stage-0 Zhihu responses.
+# Only present on machines that ran Stage 0 (local dev); skipped otherwise.
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REAL_FIXTURES = _REPO_ROOT / ".local" / "zhihu-fixtures"
+_REAL_RESPONSE_FILES = ["http_q1.json", "http_q2.json", "http_q3.json"]
+
+
+def _load_real_answers() -> dict[str, str]:
+    """Return {content_id: content_text} for Answers in real responses."""
+    answers: dict[str, str] = {}
+    if not _REAL_FIXTURES.is_dir():
+        return answers
+    for fname in _REAL_RESPONSE_FILES:
+        path = _REAL_FIXTURES / fname
+        if not path.is_file():
+            continue
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for item in data.get("Data", {}).get("Items", []):
+            if item.get("ContentType") == "Answer":
+                cid = str(item.get("ContentID", ""))
+                if cid:
+                    answers[cid] = item.get("ContentText", "") or ""
+    return answers
+
+
+@pytest.mark.skipif(
+    not _REAL_FIXTURES.is_dir(),
+    reason="requires local Stage-0 responses (.local/zhihu-fixtures)",
+)
+def test_real_sample_has_at_least_five_answers() -> None:
+    """The local real-response audit must have >= 5 Answers."""
+    answers = _load_real_answers()
+    assert len(answers) >= 5, f"expected >= 5 real answers, got {len(answers)}"
+
+
+@pytest.mark.skipif(
+    not _REAL_FIXTURES.is_dir(),
+    reason="requires local Stage-0 responses (.local/zhihu-fixtures)",
+)
+async def test_real_sample_valid_claim_coverage_above_60_percent() -> None:
+    """Spot-check real answers: >= 60% produce >= 1 evidence-backed claim.
+
+    Only answers with a committed annotation fixture count toward the
+    coverage numerator; un-annotated technical answers legitimately yield
+    0 claims (the provider returns a graceful empty analysis for them).
+    """
+    answers = _load_real_answers()
+    provider = MockLLMProvider(fixture_dir=_FIXTURE_DIR)
+
+    annotated = 0
+    valid = 0
+    for cid, content_text in answers.items():
+        fixture = _FIXTURE_DIR / f"{cid}.json"
+        if not fixture.is_file():
+            continue  # not hand-annotated → excluded from numerator
+        annotated += 1
+        try:
+            result = await extract_claims(provider, cid, content_text)
+        except ClaimExtractionError:
+            continue
+        if len(result.claims) >= 1:
+            valid += 1
+            # All saved claims must have locatable evidence.
+            for claim in result.claims:
+                assert evidence_is_substring(claim.evidence_text, content_text), (
+                    f"content_id={cid}: evidence {claim.evidence_text!r} "
+                    f"not found in real ContentText"
+                )
+
+    assert annotated >= 5, f"expected >= 5 annotated real answers, got {annotated}"
+    coverage = valid / annotated if annotated else 0.0
+    assert coverage >= 0.60, (
+        f"valid-claim coverage {coverage:.0%} < 60% "
+        f"({valid}/{annotated} annotated answers)"
+    )

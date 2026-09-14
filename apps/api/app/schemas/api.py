@@ -112,6 +112,39 @@ class AnswersResponse(BaseModel):
     total: int
 
 
+# ── GET /api/queries/{id}/graph ─────────────────────────────────────
+
+class GraphNode(BaseModel):
+    """A node in the knowledge graph (Stage 5)."""
+
+    id: str  # e.g. "answer:<uuid>" — unique within the graph
+    type: str  # QUERY | ANSWER | CLAIM | CONCEPT
+    label: str  # human-readable display label
+    url: Optional[str] = None  # Zhihu source URL (ANSWER/CLAIM nodes)
+    extra: dict = {}  # e.g. {"voteup_count": 12, "stance": "support"}
+
+
+class GraphEdge(BaseModel):
+    """An edge derived from an authoritative FK relationship."""
+
+    source: str
+    target: str
+    type: str  # RETURNS_ANSWER | MAKES_CLAIM | REFERS_TO | SIMILAR_TO
+
+
+class GraphResponse(BaseModel):
+    """Directly renderable nodes/edges for the knowledge graph.
+
+    Only the four node types and four edge types from the execution plan
+    are ever emitted; all edges come from business FKs (no generic edge
+    table, no graph database).
+    """
+
+    query_id: uuid.UUID
+    nodes: list[GraphNode]
+    edges: list[GraphEdge]
+
+
 # ── Error body ───────────────────────────────────────────────────────
 
 class ErrorResponse(BaseModel):

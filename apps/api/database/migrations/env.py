@@ -15,6 +15,7 @@ Run:
 from __future__ import annotations
 
 import asyncio
+import ssl
 from logging.config import fileConfig
 
 from alembic import context
@@ -77,7 +78,11 @@ async def run_async_migrations() -> None:
     (asyncpg driver), then runs migration steps via ``run_sync``.
     """
     db_url = config.get_main_option("sqlalchemy.url")
-    connectable = create_async_engine(db_url, poolclass=pool.NullPool)
+    connectable = create_async_engine(
+        db_url,
+        poolclass=pool.NullPool,
+        connect_args={"ssl": ssl.create_default_context()},
+    )
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

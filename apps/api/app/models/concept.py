@@ -9,7 +9,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import ARRAY, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -51,6 +51,11 @@ class Concept(TimestampMixin, Base):
     normalized_name: Mapped[str] = mapped_column(String(200), nullable=False)
     aliases: Mapped[Optional[str]] = mapped_column(Text)
     frequency: Mapped[int] = mapped_column(Integer, default=0)
+    # pgvector embedding (mapped as ARRAY[Float]; the DB column is created
+    # via raw SQL in migration 0001_core).
+    embedding: Mapped[Optional[list[float]]] = mapped_column(
+        ARRAY(Float), nullable=True
+    )
     embedding_model: Mapped[Optional[str]] = mapped_column(String(200))
 
     __table_args__ = (

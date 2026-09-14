@@ -166,8 +166,24 @@ class TestValidation:
         with pytest.raises(ZhihuDataContractError, match="All 1 item"):
             provider._parse_response(raw)
 
-    def test_ranking_score_out_of_range(self) -> None:
-        """``ranking_score`` outside [0.0, 1.0] → ``ValidationError``."""
+    def test_ranking_score_accepts_above_one(self) -> None:
+        """Real API responses can have ``ranking_score`` > 1.0 (~1.9).
+
+        This was observed in Stage-0 fixtures; the DTO must accept it.
+        Negative values are still rejected.
+        """
+        dto = SearchItemDTO(
+            original_index=0,
+            title="Test",
+            content_type="Answer",
+            content_id="x",
+            content_text="text",
+            url="https://www.zhihu.com/answer/x",
+            voteup_count=10,
+            ranking_score=1.89,
+        )
+        assert dto.ranking_score == 1.89
+
         with pytest.raises(Exception):
             SearchItemDTO(
                 original_index=0,
@@ -177,5 +193,5 @@ class TestValidation:
                 content_text="text",
                 url="https://www.zhihu.com/answer/x",
                 voteup_count=10,
-                ranking_score=1.5,
+                ranking_score=-0.5,
             )

@@ -1,0 +1,22 @@
+{
+  "summary": "考研辅导视角认为问题不只是简单选择",
+  "stance": "conditional",
+  "claims": [
+    {
+      "text": "你的问题本身不是简单的选择问题",
+      "evidence_text": "你的问题本身不是简单的选择问题",
+      "confidence": 0.9,
+      "concepts": [
+        "选择"
+      ]
+    },
+    {
+      "text": "所谓大环境差也要看具体情况",
+      "evidence_text": "所谓大环境差也是要看具体的",
+      "confidence": 0.9,
+      "concepts": [
+        "环境"
+      ]
+    }
+  ]
+}

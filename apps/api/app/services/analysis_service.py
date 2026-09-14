@@ -16,6 +16,7 @@ For each answer in a query's result set:
 
 from __future__ import annotations
 
+import json
 import time
 from datetime import datetime, timezone
 
@@ -106,6 +107,10 @@ async def analyze_answer(
     )
     for claim in existing.scalars().all():
         await session.delete(claim)
+    # Flush the deletes so the unique index (query_id, answer_id, position)
+    # no longer conflicts with the new claims we insert below — PostgreSQL
+    # checks UNIQUE constraints immediately, even within the same tx.
+    await session.flush()
 
     for i, claim in enumerate(extraction.claims):
         session.add(
@@ -120,6 +125,7 @@ async def analyze_answer(
                 embedding_model=(
                     "mock-embed-v1" if claim_vecs and i < len(claim_vecs) else None
                 ),
+                concepts_json=json.dumps(claim.concepts, ensure_ascii=False),
             )
         )
 

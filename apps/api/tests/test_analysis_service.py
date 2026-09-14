@@ -206,15 +206,63 @@ class TestAnalyzeAnswerNoDB:
         assert answer.stance == "neutral"
 
 
-# ── DB integration tests (skipped without PostgreSQL) ──────────────────
+# ── Production-provider gate (Stage 4 close-out) ───────────────────────
 
-@pytest.mark.skip(reason="requires PostgreSQL (asyncpg); enabled on CI/Neon")
-async def test_db_replace_claims_transaction() -> None:
-    """Re-analyzing an answer replaces prior claims in one transaction."""
-    pytest.fail("Implement with a live PostgreSQL fixture in CI")
+class TestProductionProviderGate:
+    """Production mode must NOT silently fall back to mock providers.
+
+    Real LLM/embedding providers are not implemented yet; the gate forces
+    an explicit NotImplementedError instead of returning mock data in
+    production — so nobody can accidentally run the pipeline on mock
+    output while believing it is real.
+    """
+
+    async def test_llm_provider_gate_raises_in_production(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from app.core.config import settings
+        from app.services.llm_provider import get_llm_provider
+
+        monkeypatch.setattr(settings, "app_mode", "production")
+        monkeypatch.setattr(settings, "llm_api_key", "")
+        with pytest.raises(NotImplementedError):
+            get_llm_provider()
+
+    async def test_embedding_provider_gate_raises_in_production(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from app.core.config import settings
+        from app.services.embedding_provider import get_embedding_provider
+
+        monkeypatch.setattr(settings, "app_mode", "production")
+        with pytest.raises(NotImplementedError):
+            get_embedding_provider()
+
+    async def test_llm_provider_returns_mock_in_mock_mode(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from app.core.config import settings
+        from app.services.llm_provider import MockLLMProvider, get_llm_provider
+
+        monkeypatch.setattr(settings, "app_mode", "mock")
+        provider = get_llm_provider()
+        assert isinstance(provider, MockLLMProvider)
+
+    async def test_embedding_provider_returns_mock_in_mock_mode(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from app.core.config import settings
+        from app.services.embedding_provider import (
+            MockEmbeddingProvider,
+            get_embedding_provider,
+        )
+
+        monkeypatch.setattr(settings, "app_mode", "mock")
+        provider = get_embedding_provider()
+        assert isinstance(provider, MockEmbeddingProvider)
 
 
-@pytest.mark.skip(reason="requires PostgreSQL (asyncpg); enabled on CI/Neon")
-async def test_db_position_check_constraint_rejects_0_and_6() -> None:
-    """INSERT position=0 or 6 must violate ck_claim_position_range."""
-    pytest.fail("Implement with a live PostgreSQL fixture in CI")
+# ── DB integration coverage ────────────────────────────────────────────
+# Live-PostgreSQL tests for claim replacement and position constraints
+# live in ``test_pg_integration.py`` (runs when a reachable DATABASE_URL /
+# TEST_DATABASE_URL is present; otherwise skipped by the pg_engine fixture).

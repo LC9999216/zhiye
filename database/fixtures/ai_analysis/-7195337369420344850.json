@@ -1,0 +1,31 @@
+{
+  "summary": "十年前进入互联网行业工作比读研更快成长",
+  "stance": "support",
+  "claims": [
+    {
+      "text": "工作三年成长可达到研究生水平",
+      "evidence_text": "干得好工作三年之后可以面试研究生了",
+      "confidence": 0.9,
+      "concepts": [
+        "工作"
+      ]
+    },
+    {
+      "text": "2016到2019年互联网飞速发展，大家普遍选择就业",
+      "evidence_text": "研究生保研基本都是学习成绩好的，代码写得好的朋友都拿大厂中厂小厂Offer满天跑",
+      "confidence": 0.9,
+      "concepts": [
+        "互联网",
+        "就业"
+      ]
+    },
+    {
+      "text": "读研毕业进大厂寥寥无几",
+      "evidence_text": "18-19年毕业的同学，进大厂寥寥无几",
+      "confidence": 0.9,
+      "concepts": [
+        "考研"
+      ]
+    }
+  ]
+}

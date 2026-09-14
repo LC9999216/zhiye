@@ -1,0 +1,14 @@
+{
+  "summary": "DeepSeek官方回答展示了推理过程",
+  "stance": "neutral",
+  "claims": [
+    {
+      "text": "首token响应时间为9.89秒",
+      "evidence_text": "首 token 响应时间： 9.89 秒",
+      "confidence": 0.9,
+      "concepts": [
+        "DeepSeek"
+      ]
+    }
+  ]
+}
