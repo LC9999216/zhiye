@@ -32,5 +32,10 @@ build/
 # Docker volumes
 pgdata/
 
+# pnpm
+.pnpm-store/
+pnpm-lock.yaml
+pnpm-workspace.yaml
+
 # Local fixtures and real API responses
 .local/

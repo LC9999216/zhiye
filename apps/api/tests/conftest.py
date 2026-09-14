@@ -1,9 +1,19 @@
-"""Shared pytest fixtures for the Zhibian API test suite."""
+"""Shared pytest fixtures for the Zhibian API test suite.
+
+When no database is available, DB-dependent routes use a monkey-patched
+``get_db`` dependency that raises a clear error so tests can distinguish
+between "no DB available" and actual logic failures.
+
+Tests that genuinely exercise DB interactions should either:
+1. Use an in-memory SQLite via ``aiosqlite``, or
+2. Require a running PostgreSQL container and be explicitly marked.
+"""
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+from unittest.mock import AsyncMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient

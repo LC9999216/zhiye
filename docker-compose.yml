@@ -31,6 +31,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # Run migrations on start (single-process, no external task queue).
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
 
   web:
     image: node:24-alpine
