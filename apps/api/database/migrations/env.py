@@ -18,7 +18,7 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import pool, text
+from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
@@ -37,7 +37,9 @@ if config.config_file_name is not None:
 
 # Override the ini-file URL with the live project setting.
 # This ensures the real DATABASE_URL is never written to alembic.ini.
-config.set_main_option("sqlalchemy.url", settings.database_url)
+config.set_main_option(
+    "sqlalchemy.url", settings.database_url.replace("%", "%%")
+)
 
 target_metadata = Base.metadata
 

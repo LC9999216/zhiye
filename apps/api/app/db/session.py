@@ -7,7 +7,7 @@ import ssl
 from collections.abc import AsyncIterator
 
 from sqlalchemy import text
-from sqlalchemy.engine import make_url
+from sqlalchemy.engine import URL, make_url
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -39,12 +39,22 @@ def connection_args_for_database(url: str) -> dict[str, object]:
     return {}
 
 
-def normalized_database_url(url: str) -> str:
-    """Remove psycopg-style ``sslmode`` before handing URL to asyncpg."""
+def normalized_database_url(url: str) -> URL:
+    """Return an asyncpg URL without psycopg-only query parameters.
+
+    Returning the SQLAlchemy URL object preserves the decoded password.  A
+    string rendered with ``str(URL)`` masks the password as ``***`` and cannot
+    be passed back to ``create_async_engine`` for a real connection.
+    """
     parsed = make_url(url)
     query = dict(parsed.query)
     query.pop("sslmode", None)
-    return str(parsed.set(query=query))
+    drivername = (
+        "postgresql+asyncpg"
+        if parsed.get_backend_name() in {"postgres", "postgresql"}
+        else parsed.drivername
+    )
+    return parsed.set(drivername=drivername, query=query)
 
 engine: AsyncEngine = create_async_engine(
     normalized_database_url(settings.database_url),

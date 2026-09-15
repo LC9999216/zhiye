@@ -11,8 +11,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 # Root of the api package (one level above tests/).
 _API_ROOT = Path(__file__).resolve().parents[1]
 
@@ -99,6 +97,13 @@ class TestEnvPy:
         assert "compare_type=True" in content, (
             "env.py should pass compare_type=True to context.configure"
         )
+
+    def test_env_escapes_percent_encoded_passwords_for_configparser(self) -> None:
+        """ConfigParser must not parse URL-encoded password characters as interpolation."""
+        env_path = _API_ROOT / "database" / "migrations" / "env.py"
+        content = env_path.read_text(encoding="utf-8")
+
+        assert 'settings.database_url.replace("%", "%%")' in content
 
 
 class TestMigrationRevision:
