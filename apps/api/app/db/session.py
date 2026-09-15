@@ -48,7 +48,8 @@ def normalized_database_url(url: str) -> URL:
     """
     parsed = make_url(url)
     query = dict(parsed.query)
-    query.pop("sslmode", None)
+    for psycopg_parameter in ("sslmode", "channel_binding"):
+        query.pop(psycopg_parameter, None)
     drivername = (
         "postgresql+asyncpg"
         if parsed.get_backend_name() in {"postgres", "postgresql"}

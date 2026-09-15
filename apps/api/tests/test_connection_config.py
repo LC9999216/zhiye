@@ -23,6 +23,15 @@ def test_sslmode_is_removed_from_asyncpg_url() -> None:
     assert "ssl" in connection_args_for_database(url)
 
 
+def test_channel_binding_is_removed_from_asyncpg_url() -> None:
+    normalized = normalized_database_url(
+        "postgresql://user:pass@ep.example.neon.tech/db"
+        "?sslmode=require&channel_binding=require"
+    )
+
+    assert "channel_binding" not in normalized.query
+
+
 def test_password_is_not_replaced_with_masked_rendering() -> None:
     normalized = normalized_database_url(
         "postgresql://user:secret@db.example/db"
